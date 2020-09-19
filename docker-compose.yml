@@ -1,10 +1,19 @@
 version: "3.5"
 
 services:
+  db:
+    image: postgres:10.1-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: sketch
+      POSTGRES_PASSWORD: sketch
+      POSTGRES_DB: sketch
+
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     env_file:
     - .env
     volumes:
@@ -12,9 +21,15 @@ services:
     ports:
     - "${ASPNETCORE_SOCKET_BIND_PORT}:${ASPNETCORE_SOCKET_BIND_PORT}"
     depends_on:
+      - db
       - es
     command:
       [
+      "./scripts/wait-for-it.sh",
+        "db:5432",
+        "-t",
+        "120",
+        "--",
       "./scripts/wait-for-it.sh",
         "es:9200",
         "-t",

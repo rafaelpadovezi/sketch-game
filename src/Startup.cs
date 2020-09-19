@@ -28,7 +28,7 @@ namespace Sketch
         {
             services
                 .AddDbContext<SketchDbContext>(options =>
-                    options.UseSqlServer(Configuration.GetConnectionString("DBConnection")))
+                    options.UseNpgsql(Configuration.GetConnectionString("DBConnection")))
                 .AddControllers()
                 .AddNewtonsoftJson(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
         }
