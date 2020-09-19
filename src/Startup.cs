@@ -42,7 +42,6 @@ namespace Sketch
                 app.UseDeveloperExceptionPage();
             }
 
-            // middleware for condensing many access log lines into a SINGLE useful one
             app.UseSerilogRequestLogging();
 
             app.UseDefaultFiles();
