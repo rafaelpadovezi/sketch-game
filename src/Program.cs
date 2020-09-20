@@ -17,16 +17,16 @@ namespace Sketch
                 .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true)
                 .AddEnvironmentVariables()
                 .Build();
-            
+
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
         }
-        
+
         public static void Main(string[] args)
         {
             ConfigureLogger();
-            
+
             try
             {
                 CreateHostBuilder(args).Build().Run();

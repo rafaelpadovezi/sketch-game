@@ -1,9 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sketch", "src\Sketch.csproj", "{AD2AF2F4-60A8-4BD4-B99E-6FC79AEE807A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sketch", "src\Sketch.csproj", "{AD2AF2F4-60A8-4BD4-B99E-6FC79AEE807A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8C946C15-E4C2-4A66-9DE8-9DBABF3E851E}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.env = .env
+		Directory.Build.props = Directory.Build.props
+		docker-compose.yml = docker-compose.yml
+		Dockerfile = Dockerfile
+		Dockerfile.dev = Dockerfile.dev
+		stylecop.json = stylecop.json
+		StyleCop.ruleset = StyleCop.ruleset
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "tests\Tests.csproj", "{D9B88CAF-3115-4729-8B36-C1F1FD09D472}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,9 +27,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{AD2AF2F4-60A8-4BD4-B99E-6FC79AEE807A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -30,5 +41,23 @@ Global
 		{AD2AF2F4-60A8-4BD4-B99E-6FC79AEE807A}.Release|x64.Build.0 = Release|Any CPU
 		{AD2AF2F4-60A8-4BD4-B99E-6FC79AEE807A}.Release|x86.ActiveCfg = Release|Any CPU
 		{AD2AF2F4-60A8-4BD4-B99E-6FC79AEE807A}.Release|x86.Build.0 = Release|Any CPU
+		{D9B88CAF-3115-4729-8B36-C1F1FD09D472}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9B88CAF-3115-4729-8B36-C1F1FD09D472}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9B88CAF-3115-4729-8B36-C1F1FD09D472}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D9B88CAF-3115-4729-8B36-C1F1FD09D472}.Debug|x64.Build.0 = Debug|Any CPU
+		{D9B88CAF-3115-4729-8B36-C1F1FD09D472}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D9B88CAF-3115-4729-8B36-C1F1FD09D472}.Debug|x86.Build.0 = Debug|Any CPU
+		{D9B88CAF-3115-4729-8B36-C1F1FD09D472}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9B88CAF-3115-4729-8B36-C1F1FD09D472}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9B88CAF-3115-4729-8B36-C1F1FD09D472}.Release|x64.ActiveCfg = Release|Any CPU
+		{D9B88CAF-3115-4729-8B36-C1F1FD09D472}.Release|x64.Build.0 = Release|Any CPU
+		{D9B88CAF-3115-4729-8B36-C1F1FD09D472}.Release|x86.ActiveCfg = Release|Any CPU
+		{D9B88CAF-3115-4729-8B36-C1F1FD09D472}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {56AE8056-AC71-49E5-8AB4-371A9F759839}
 	EndGlobalSection
 EndGlobal
