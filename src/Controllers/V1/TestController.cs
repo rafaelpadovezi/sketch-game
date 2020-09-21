@@ -6,6 +6,6 @@ namespace Sketch.Controllers.V1
     [Route("api/v1/[controller]")]
     public class TestController : ControllerBase
     {
-        public IActionResult Get() => Ok("Ok!");
+        public IActionResult Get() => Ok("1");
     }
 }

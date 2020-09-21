@@ -1,3 +1,4 @@
+using AutoMapper;
 using Infrastructure.Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -7,7 +8,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Sketch.Infrastructure.Database;
+using Sketch.Infrastructure.Database.Repositories;
+using Sketch.Infrastructure.Database.Repositories.Interfaces;
+using Sketch.Infrastructure.IoC;
 using Sketch.Models;
+using Sketch.Services;
+using Sketch.Services.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -27,6 +34,8 @@ namespace Sketch
         public void ConfigureServices(IServiceCollection services)
         {
             services
+                .AddApplicationCore()
+                .AddHttpContextAccessor()
                 .AddDbContext<SketchDbContext>(options =>
                 {
                     options
@@ -39,11 +48,13 @@ namespace Sketch
                             .EnableSensitiveDataLogging();
                     }
                 })
+                .AddAutoMapper(typeof(Startup))
+                // MVC Stuff
                 .AddControllers()
                 .AddNewtonsoftJson(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment _, ILogger<Startup> logger)
+        public void Configure(IApplicationBuilder app, ILogger<Startup> logger)
         {
             logger.LogInformation("Configuring start up with environment: {EnvironmentName}", Env.EnvironmentName);
 

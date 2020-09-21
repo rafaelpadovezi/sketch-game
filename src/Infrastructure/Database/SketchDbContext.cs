@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Sketch.Models;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,6 +51,8 @@ namespace Infrastructure.Database
             foreach (var item in entitiesOnDbContext.Where(t => t.State == EntityState.Added))
             {
                 item.Entity.UpdatedAt = item.Entity.CreatedAt = System.DateTime.Now;
+
+                item.Entity.Id = Guid.NewGuid();
             }
 
             // updatedAt addition
