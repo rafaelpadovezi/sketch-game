@@ -1,0 +1,7 @@
+$primary: #9381ff;
+
+@import 'bulma/bulma.sass';
+
+h1.title {
+  color: $primary;
+}

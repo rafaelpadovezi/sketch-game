@@ -34,6 +34,7 @@ namespace Sketch
         public void ConfigureServices(IServiceCollection services)
         {
             services
+                .AddCors()
                 .AddApplicationCore()
                 .AddHttpContextAccessor()
                 .AddDbContext<SketchDbContext>(options =>
@@ -69,6 +70,8 @@ namespace Sketch
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
             app.UseEndpoints(endpoints =>
             {
