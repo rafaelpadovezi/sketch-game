@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sketch.Infrastructure.Database.Repositories.Interfaces;
 using Sketch.Models;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sketch.Infrastructure.Database.Repositories
@@ -13,12 +14,9 @@ namespace Sketch.Infrastructure.Database.Repositories
         }
 
         public async Task<bool> NicknameIsInUse(string username) =>
-            await DbSet.AnyAsync(x => x.Username.ToLower() == username.ToLower());
-
-        public async Task Add(Player player)
-        {
-            DbSet.Add(player);
-            await Context.SaveChangesAsync();
-        }
+            await DbSet
+                .Where(x => x.IsActive)
+                .Where(x => x.Username.ToLower() == username.ToLower())
+                .AnyAsync();
     }
 }

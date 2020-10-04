@@ -19,7 +19,7 @@ describe("Login.vue", () => {
     actions = {};
     store = {
       modules: {
-        users: {
+        chat: {
           actions,
           namespaced: true
         }

@@ -5,6 +5,6 @@ namespace Sketch.DTOs
     public class PlayerViewModel
     {
         public Guid Id { get; set; }
-        public string Username { get; set; }
+        public string Username { get; set; } = string.Empty;
     }
 }

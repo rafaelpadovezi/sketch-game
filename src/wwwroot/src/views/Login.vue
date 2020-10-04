@@ -38,7 +38,7 @@ export default {
     };
   },
   methods: {
-    ...mapActions("users", ["login"]),
+    ...mapActions("chat", ["login"]),
     onLogin(username) {
       this.errorMessage = "";
       return this.login(username).catch(err => {

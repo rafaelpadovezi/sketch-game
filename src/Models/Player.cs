@@ -7,6 +7,7 @@ namespace Sketch.Models
     {
         public Guid? GameRoomId { get; set; }
         public string Username { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
         public GameRoom? GameRoom { get; set; }
         public ICollection<PlayerTurn> PlayerTurns { get; set; } = new List<PlayerTurn>();
     }

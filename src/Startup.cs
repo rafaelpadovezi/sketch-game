@@ -8,13 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using Sketch.Infrastructure.Database;
-using Sketch.Infrastructure.Database.Repositories;
-using Sketch.Infrastructure.Database.Repositories.Interfaces;
+using Sketch.Extensions;
 using Sketch.Infrastructure.IoC;
 using Sketch.Models;
-using Sketch.Services;
-using Sketch.Services.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -59,11 +56,6 @@ namespace Sketch
         {
             logger.LogInformation("Configuring start up with environment: {EnvironmentName}", Env.EnvironmentName);
 
-            if (Env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-
             app.UseSerilogRequestLogging();
 
             app.UseDefaultFiles();
@@ -73,12 +65,21 @@ namespace Sketch
 
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
+            var webSocketOptions = new WebSocketOptions()
+            {
+                KeepAliveInterval = TimeSpan.FromSeconds(120),
+                ReceiveBufferSize = 4 * 1024
+            };
+            app.UseWebSockets(webSocketOptions);
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
 
             Migrate(app, logger, Env.IsDevelopment());
+
+            app.UseGameServer();
         }
 
         public static readonly ILoggerFactory ConsoleLoggerFactory

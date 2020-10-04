@@ -26,7 +26,7 @@ namespace Sketch.Services
             }
 
             Player player = new Player { Username = username };
-            await _playerRepository.Add(player);
+            await _playerRepository.AddAndSave(player);
             return (true, _mapper.Map<Player, PlayerViewModel>(player));
         }
     }
