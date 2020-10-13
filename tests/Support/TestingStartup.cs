@@ -12,6 +12,7 @@ namespace Tests.Support
 {
     public class TestingStartUp
     {
+        private static object _lockObject = new object();
         public TestingStartUp(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -69,13 +70,16 @@ namespace Tests.Support
 
             var context = new SketchDbContext(options);
 
-            // always execute possible missing migrations
-            if (!context.Database.GetPendingMigrations().ToList().Any())
+            lock (_lockObject)
             {
-                return;
-            }
+                // always execute possible missing migrations
+                if (!context.Database.GetPendingMigrations().ToList().Any())
+                {
+                    return;
+                }
 
-            context.Database.Migrate();
+                context.Database.Migrate();
+            }
         }
     }
 }

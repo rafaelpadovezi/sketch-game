@@ -3,6 +3,7 @@ version: "3.5"
 services:
   db:
     image: postgres:10.1-alpine
+    container_name: sketch-postgres
     ports:
       - "5432:5432"
     environment:
@@ -14,10 +15,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
+    container_name: sketch-app
     env_file:
     - .env
-    volumes:
-    - .:/app
     ports:
     - "${ASPNETCORE_SOCKET_BIND_PORT}:${ASPNETCORE_SOCKET_BIND_PORT}"
     depends_on:
@@ -38,6 +38,28 @@ services:
         "./scripts/start-from-compose.sh",
       ]
 
+  integration-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: sketch-tests
+    env_file:
+    - .env
+    volumes:
+    - .:/app
+    depends_on:
+      - db
+    command:
+      [
+      "./scripts/wait-for-it.sh",
+        "db:5432",
+        "-t",
+        "120",
+        "--",
+        "dotnet",
+        "test"
+      ]
+
   # ELK stack
   # warning: ES is fine, but kibana/logstash are VERY slow to boot
   es:
@@ -45,6 +67,7 @@ services:
       context: build/elasticsearch/
       args:
         ELK_VERSION: 7.8.0
+    container_name: sketch-es
     volumes:
       - type: bind
         source: ./build/elasticsearch/config/elasticsearch.yml
@@ -66,6 +89,7 @@ services:
 #      context: build/logstash/
 #      args:
 #        ELK_VERSION: 7.8.0
+#    container_name: sketch-logstash
 #    volumes:
 #      - type: bind
 #        source: ./build/logstash/config/logstash.yml
@@ -89,6 +113,7 @@ services:
 #      context: build/kibana/
 #      args:
 #        ELK_VERSION: 7.8.0
+#    container_name: sketch-kibana
 #    volumes:
 #      - type: bind
 #        source: ./build/kibana/config/kibana.yml
