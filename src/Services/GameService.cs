@@ -2,6 +2,7 @@
 using Sketch.Infrastructure.Connection;
 using Sketch.Infrastructure.Database.Repositories.Interfaces;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace Sketch.Services
@@ -22,41 +23,40 @@ namespace Sketch.Services
             _logger = logger;
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.LayoutRules", "SA1503:Braces should not be omitted", Justification = "<Pending>")]
-        public async Task<bool> NewCommand(PlayerConnection connection, string commandString)
+        [SuppressMessage("StyleCop.CSharp.LayoutRules", "SA1503:Braces should not be omitted", Justification = "<Pending>")]
+        public async Task<bool> NewCommand(Guid playerId, string commandString)
         {
-            if (!connection.IsConnected)
-            {
-                _logger.LogInformation("Player disconnected");
-                await _generalRoom.PlayerLeaves(connection);
-                return true;
-            }
-
             _logger.LogInformation("Received {commandString} from ", commandString);
 
             var command = CommandParser.Parse(commandString);
             _logger.LogInformation("Parsed {@command}", command);
 
-            var player = await _playerRepository.GetById(connection.Id)
+            var player = await _playerRepository.GetById(playerId)
                 ?? throw new Exception("Player not found");
 
             if (command.Type == CommandType.Exit)
-                await _generalRoom.PlayerLeaves(connection);
+                await _generalRoom.PlayerLeaves(playerId);
             if (command.Type == CommandType.PublicMessage)
-                await _generalRoom.PlayerSendMessage(connection, command.Message);
+                await _generalRoom.PlayerSendMessage(playerId, command.Message);
 
             return command.Type == CommandType.Exit;
         }
 
-        public async Task NewConnection(PlayerConnection connection)
+        public async Task NewPlayer(Guid playerId)
         {
-            await _generalRoom.PlayerEnters(connection);
+            await _generalRoom.PlayerEnters(playerId);
+        }
+
+        public async Task PlayerLeaves(Guid playerId)
+        {
+            await _generalRoom.PlayerLeaves(playerId);
         }
     }
 
     public interface IGameService
     {
-        Task NewConnection(PlayerConnection webSocket);
-        Task<bool> NewCommand(PlayerConnection webSocket, string commandString);
+        Task NewPlayer(Guid playerId);
+        Task<bool> NewCommand(Guid playerId, string commandString);
+        Task PlayerLeaves(Guid playerId);
     }
 }

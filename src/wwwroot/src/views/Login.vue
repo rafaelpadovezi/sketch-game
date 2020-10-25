@@ -9,6 +9,7 @@
               class="input"
               type="text"
               placeholder="username"
+              v-on:keyup.enter="onLogin(username)"
               v-model="username"
             />
           </div>

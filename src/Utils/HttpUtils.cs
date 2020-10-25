@@ -10,8 +10,9 @@ namespace Sketch.Utils
 {
     public static class HttpClientExtensions
     {
-        public static async Task<HttpResponseMessage> PostJsonAsync<T>(this HttpClient httpClient, string url, T data) =>
-            await httpClient.PostAsync(url, new JsonContent(data));
+        public static async Task<HttpResponseMessage> PostJsonAsync<T>(
+            this HttpClient httpClient, string url, T data) where T : notnull =>
+                await httpClient.PostAsync(url, new JsonContent(data));
     }
 
     public static class HttpContentExtensions

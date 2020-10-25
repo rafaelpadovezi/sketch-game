@@ -12,16 +12,17 @@ namespace Sketch.Infrastructure.Connection
 {
     public interface IServerConnection
     {
-        void AddPlayerConnection(PlayerConnection playerConnection);
+        void AddPlayerConnection(IPlayerConnection playerConnection);
         Task ListenTo(IEnumerable<Player> players, Action<Player, string> action);
-        void RemovePlayerConnection(PlayerConnection playerConnection);
+        void RemovePlayerConnection(IPlayerConnection playerConnection);
         Task Send(ChatServerResponse serverResponse, IEnumerable<Player> players);
+        void Clear();
     }
 
     public class ServerConnection : IServerConnection
     {
-        private readonly ConcurrentDictionary<Guid, PlayerConnection> _connections
-            = new ConcurrentDictionary<Guid, PlayerConnection>();
+        private readonly ConcurrentDictionary<Guid, IPlayerConnection> _connections
+            = new ConcurrentDictionary<Guid, IPlayerConnection>();
 
         public async Task Send(
             ChatServerResponse serverResponse,
@@ -30,11 +31,10 @@ namespace Sketch.Infrastructure.Connection
             await Task.WhenAll(players
                 .Where(x => _connections.ContainsKey(x.Id))
                 .Where(x => _connections[x.Id].IsConnected)
-                .Select(x => _connections[x.Id]
-                    .Send<ChatServerResponse>(serverResponse)));
+                .Select(x => _connections[x.Id].Send(serverResponse)));
         }
 
-        public void AddPlayerConnection(PlayerConnection playerConnection)
+        public void AddPlayerConnection(IPlayerConnection playerConnection)
         {
             _connections.AddOrUpdate(
                 playerConnection.Id,
@@ -56,12 +56,17 @@ namespace Sketch.Infrastructure.Connection
             return Task.WhenAny(tasks);
         }
 
-        public void RemovePlayerConnection(PlayerConnection playerConnection)
+        public void RemovePlayerConnection(IPlayerConnection playerConnection)
         {
             if (!_connections.TryRemove(playerConnection.Id, out _))
             {
                 throw new CannotRemovePlayerConnectionException();
             }
+        }
+
+        public void Clear()
+        {
+            _connections.Clear();
         }
     }
 
@@ -79,7 +84,7 @@ namespace Sketch.Infrastructure.Connection
             WebSocket.State != WebSocketState.Closed &&
             WebSocket.State != WebSocketState.Aborted;
 
-        public async Task Send<T>(ChatServerResponse serverResponse) =>
+        public async Task Send(ChatServerResponse serverResponse) =>
             await WebSocket.SendJsonAsync(serverResponse);
 
         public async Task<string> ReceiveString() =>
@@ -89,7 +94,9 @@ namespace Sketch.Infrastructure.Connection
     public interface IPlayerConnection
     {
         bool IsConnected { get; }
+        Guid Id { get; set; }
+
         Task<string> ReceiveString();
-        Task Send<T>(ChatServerResponse serverResponse);
+        Task Send(ChatServerResponse serverResponse);
     }
 }

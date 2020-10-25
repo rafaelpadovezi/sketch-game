@@ -11,9 +11,9 @@ namespace Sketch.Services
     {
         string Name { get; }
 
-        Task PlayerEnters(PlayerConnection connection);
-        Task PlayerLeaves(PlayerConnection connection);
-        Task PlayerSendMessage(PlayerConnection connection, string message);
+        Task PlayerEnters(Guid playerId);
+        Task PlayerLeaves(Guid playerId);
+        Task PlayerSendMessage(Guid playerId, string message);
     }
 
     public class GeneralRoom : IGeneralRoom
@@ -33,30 +33,27 @@ namespace Sketch.Services
             _serverConnection = serverConnection;
         }
 
-        public async Task PlayerEnters(PlayerConnection connection)
+        public async Task PlayerEnters(Guid playerId)
         {
-            _serverConnection.AddPlayerConnection(connection);
-
-            var player = await _playerRepository.GetById(connection.Id)
+            var player = await _playerRepository.GetById(playerId)
                 ?? throw new Exception("Player not found");
             await SendAll(ChatMessage.NewPlayer(Name, player.Username));
         }
 
-        public async Task PlayerLeaves(PlayerConnection connection)
+        public async Task PlayerLeaves(Guid playerId)
         {
-            var player = await _playerRepository.GetById(connection.Id)
+            var player = await _playerRepository.GetById(playerId)
                 ?? throw new Exception("Player not found");
             player.IsActive = false;
 
             await SendAll(ChatMessage.PlayerLeftRoom(Name, player.Username));
 
-            _serverConnection.RemovePlayerConnection(connection);
             await _playerRepository.SaveChanges();
         }
 
-        public async Task PlayerSendMessage(PlayerConnection connection, string message)
+        public async Task PlayerSendMessage(Guid playerId, string message)
         {
-            var player = await _playerRepository.GetById(connection.Id)
+            var player = await _playerRepository.GetById(playerId)
                 ?? throw new Exception("Player not found");
 
             await SendAll(ChatMessage.Public(player.Username, message));

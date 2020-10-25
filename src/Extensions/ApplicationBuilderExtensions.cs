@@ -21,27 +21,52 @@ namespace Sketch.Extensions
                     if (context.WebSockets.IsWebSocketRequest)
                     {
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                        var service = context.
-                            RequestServices.GetService<IGameService>();
                         var logger = context
                             .RequestServices.GetService<ILogger<IApplicationBuilder>>();
+                        var server = context
+                            .RequestServices.GetService<IServerConnection>();
 
                         var connection = new PlayerConnection(webSocket);
                         var commandString = await connection.ReceiveString();
                         connection.Id = Guid.Parse(commandString);
+                        server.AddPlayerConnection(connection);
 
-                        using var scope = logger.BeginScope(new { PlayerId = connection.Id });
-
-                        await service.NewConnection(connection);
+                        using var loggingScope = logger.BeginScope(new { PlayerId = connection.Id });
+                        using (var scope = context.RequestServices.CreateScope())
+                        {
+                            var service = scope.ServiceProvider.GetService<IGameService>();
+                            await service.NewPlayer(connection.Id);
+                        }
 
                         bool exitCommand = false;
                         while (!exitCommand)
                         {
-                            commandString = await connection.ReceiveString();
-                            service = context.
-                                RequestServices.GetService<IGameService>();
-                            exitCommand = await service.NewCommand(connection, commandString);
+                            try
+                            {
+                                commandString = await connection.ReceiveString();
+                            }
+                            catch (WebSocketException ex)
+                            {
+                                if (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+                                {
+                                    logger.LogWarning(ex.Message);
+                                }
+                            }
+
+                            using var scope = context.RequestServices.CreateScope();
+                            var service = scope.ServiceProvider.GetService<IGameService>();
+
+                            if (!connection.IsConnected)
+                            {
+                                logger.LogInformation("Player disconnected");
+                                await service.PlayerLeaves(connection.Id);
+                                break;
+                            }
+
+                            exitCommand = await service.NewCommand(connection.Id, commandString);
                         }
+
+                        server.RemovePlayerConnection(connection);
                     }
                     else
                     {
