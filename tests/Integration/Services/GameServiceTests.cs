@@ -72,5 +72,41 @@ namespace Tests.Integration.Services
 
             server.Clear();
         }
+
+        [Fact]
+        public async Task ShouldReturnExitCommand()
+        {
+            var server = Services.GetRequiredService<IServerConnection>();
+            var testingScenarioBuilder = new TestingScenarioBuilder(DbContext);
+            var mockedPlayers = await testingScenarioBuilder.BuildScenarioWith3ConnectedPlayers(server);
+
+            var sut = Services.GetRequiredService<IGameService>();
+            bool exitCommand = await sut.NewCommand(mockedPlayers.First().Object.Id, @"\exit");
+
+            Assert.True(exitCommand);
+            foreach (var mock in mockedPlayers)
+            {
+                mock.Verify(x => x.Send(It.IsAny<ChatMessage>()), Times.Never);
+            }
+
+            server.Clear();
+        }
+
+        [Fact]
+        public async Task ShouldReturnListOfGameRooms()
+        {
+            var server = Services.GetRequiredService<IServerConnection>();
+            var testingScenarioBuilder = new TestingScenarioBuilder(DbContext);
+            var mockedPlayers = await testingScenarioBuilder.BuildScenarioWith3ConnectedPlayers(server);
+
+            var sut = Services.GetRequiredService<IGameService>();
+            _ = await sut.NewCommand(mockedPlayers.First().Object.Id, @"\list");
+
+            mockedPlayers.First().Verify(
+                x => x.Send(It.Is<ChatServerResponse>(x => x.Type == ResponseType.ListGameRooms)),
+                Times.Once);
+
+            server.Clear();
+        }
     }
 }

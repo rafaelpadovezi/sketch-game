@@ -19,6 +19,7 @@ namespace Sketch.Services
         PrivateMessageToUser,
         ListChatRooms,
         ChangeChatRoom,
+
         Kudos,
         Exit,
         Error,
@@ -39,18 +40,18 @@ namespace Sketch.Services
             $"{PublicMessageToUserCommand} {{user}} - Send public message to user",
             $"{PrivateMessageToUserCommand} {{user}} - Send private message to user",
             $"{KudosCommand} {{user}} - Send kudos to user",
-            $"{ListChatRoomsCommand} - List chatrooms",
+            $"{ListGameRoomsCommand} - List game rooms",
             $"{ChangeChatRoomCommand} {{chatRoom}} - Change chatroom",
             $"{ExitCommand} - Exit chat server"
         };
-        private const string ListChatRoomsCommand = @"\list";
+        private const string ListGameRoomsCommand = @"\list";
         private const string ChangeChatRoomCommand = @"\c";
         private const string ExitCommand = @"\exit";
         private const string HelpCommand = @"\help";
-        private const char Separator = ' ';
         private const string PublicMessageToUserCommand = @"\u";
         private const string PrivateMessageToUserCommand = @"\p";
         private const string KudosCommand = @"\kudos";
+        private const char Separator = ' ';
         private static readonly string[] DestinataryCommands =
             {
                 PublicMessageToUserCommand,
@@ -81,7 +82,7 @@ namespace Sketch.Services
                 return ParseChangeRoomCommand(commandString);
             }
 
-            if (Is(ListChatRoomsCommand, commandString))
+            if (Is(ListGameRoomsCommand, commandString))
             {
                 return new ChatCommand
                 {

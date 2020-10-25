@@ -7,12 +7,14 @@ const ADD_MESSAGE = "ADD_MESSAGE";
 const CONNECT = "CONNECT";
 const LOGIN = "LOGIN";
 const DISCONNECT = "DISCONNECT";
+const SET_GAME_ROOMS = "SET_GAME_ROOMS";
 
 export default {
   strict: process.env.NODE_ENV !== "production",
   namespaced: true,
   state: {
     socket: undefined,
+    gameRooms: [],
     messages: [],
     player: undefined,
     isConnected: false
@@ -31,6 +33,10 @@ export default {
     },
     [LOGIN](state, player) {
       state.player = player;
+    },
+    [SET_GAME_ROOMS](state, gameRooms) {
+      state.gameRooms.length = 0;
+      state.gameRooms.push(...gameRooms);
     }
   },
   actions: {
@@ -43,6 +49,10 @@ export default {
       switch (serverResponse.Type) {
         case 0:
           commit(ADD_MESSAGE, serverResponse.Message);
+          break;
+        case 2:
+          commit(SET_GAME_ROOMS, serverResponse.Details);
+          break;
       }
     },
     async connect({ commit, dispatch }, player) {
@@ -52,6 +62,7 @@ export default {
         commit(CONNECT, socket);
         router.push("/general");
         socket.send(player.id);
+        dispatch("sendMessage", "\\list");
       };
 
       socket.onmessage = response => dispatch("onMessage", response);
@@ -75,6 +86,7 @@ export default {
   },
   getters: {
     messages: state => state.messages,
-    isConnected: state => state.isConnected
+    isConnected: state => state.isConnected,
+    gameRooms: state => state.gameRooms
   }
 };

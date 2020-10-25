@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Sketch.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Sketch.DTOs
 {
@@ -6,7 +9,8 @@ namespace Sketch.DTOs
     {
         ChatMessage,
         Error,
-        ListChatRooms
+        ListGameRooms,
+        Help
     }
 
     public class ChatServerResponse
@@ -18,18 +22,15 @@ namespace Sketch.DTOs
         public static ChatServerResponse Help() =>
             new ChatServerResponse
             {
-                Type = ResponseType.ChatMessage,
-                Message =
-                    "****** HELP ******" +
-                    "\\p {user}- send private message to {user}" +
-                    "******************"
+                Type = ResponseType.Help,
+                Details = CommandParser.CommandList
             };
 
-        internal static ChatServerResponse ListChatRooms(string[] chatRoomList) =>
+        internal static ChatServerResponse ListChatRooms(IEnumerable<string> chatRoomList) =>
             new ChatServerResponse
             {
-                Type = ResponseType.ListChatRooms,
-                Details = chatRoomList
+                Type = ResponseType.ListGameRooms,
+                Details = chatRoomList.ToArray()
             };
 
         public static ChatServerResponse Error(string message) =>

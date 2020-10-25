@@ -16,6 +16,7 @@ namespace Sketch.Infrastructure.IoC
                 .AddScoped(typeof(IRepository<>), typeof(EntityRepository<>))
                 .AddScoped<IPlayerRepository, PlayerRepository>()
                 .AddScoped<IPlayerService, PlayerService>()
+                .AddScoped<IGameRoomRepository, GameRoomRepository>()
                 .AddScoped<IGeneralRoom, GeneralRoom>()
                 .AddScoped<IGameService, GameService>()
                 .AddSingleton<IServerConnection, ServerConnection>();

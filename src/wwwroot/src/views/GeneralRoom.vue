@@ -11,7 +11,11 @@
           <h3 class="title is-3">Rooms</h3>
         </div>
         <div class="select is-multiple is-fullwidth">
-          <select multiple style="height:300px"> </select>
+          <select multiple style="height:300px">
+            <option v-for="(room, index) in gameRooms" v-bind:key="index">{{
+              room
+            }}</option>
+          </select>
         </div>
       </article>
 
@@ -62,7 +66,11 @@ export default {
     if (!this.isConnected) this.$router.push("/");
   },
   computed: {
-    ...mapGetters("chat", { messages: "messages", isConnected: "isConnected" })
+    ...mapGetters("chat", {
+      messages: "messages",
+      isConnected: "isConnected",
+      gameRooms: "gameRooms"
+    })
   },
   methods: {
     ...mapActions("chat", ["sendMessage"]),
