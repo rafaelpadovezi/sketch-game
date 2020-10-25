@@ -32,7 +32,7 @@ namespace Tests.Integration
             // arrange
             var username = "Player123";
             var testingScenarioBuilder = new TestingScenarioBuilder(DbContext);
-            await testingScenarioBuilder.BuildScenarioPlayer(username);
+            await testingScenarioBuilder.BuildScenarioWithPlayer(username);
 
             // act
             var response = await Client.PostJsonAsync(url, username);
