@@ -53,6 +53,8 @@ export default {
         case 2:
           commit(SET_GAME_ROOMS, serverResponse.Details);
           break;
+        case 3:
+          router.push(`/gameroom/${serverResponse.Details}`);
       }
     },
     async connect({ commit, dispatch }, player) {

@@ -4,9 +4,7 @@ using Sketch.DTOs;
 using Sketch.Infrastructure.Connection;
 using Sketch.Services;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Tests.Support;
 using Xunit;
@@ -105,6 +103,66 @@ namespace Tests.Integration.Services
             mockedPlayers.First().Verify(
                 x => x.Send(It.Is<ChatServerResponse>(x => x.Type == ResponseType.ListGameRooms)),
                 Times.Once);
+
+            server.Clear();
+        }
+
+        [Fact]
+        public async Task ShouldEnterGameRoom()
+        {
+            var server = Services.GetRequiredService<IServerConnection>();
+            var testingScenarioBuilder = new TestingScenarioBuilder(DbContext);
+            var mockPlayers = await testingScenarioBuilder.BuildScenarioWith3PlayersAndGameRoom(server);
+
+            var sut = Services.GetRequiredService<IGameService>();
+            _ = await sut.NewCommand(mockPlayers[0].Object.Id, @"\c gameroom1");
+
+            var gameroom = DbContext.GameRooms.Single(x => x.Name == "gameroom1");
+            Assert.Contains(mockPlayers[0].Object.Id, gameroom.Players.Select(x => x.Id));
+            mockPlayers[0].Verify(
+                x => x.Send(It.Is<ChatServerResponse>(x => x.Type == ResponseType.EnterGameRoom)), Times.Once);
+            mockPlayers[0].Verify(
+                x => x.Send(It.Is<ChatMessage>(m => m.Message.Contains("has joined #gameroom1"))), Times.Once);
+            mockPlayers[1].Verify(
+                x => x.Send(It.Is<ChatMessage>(m => m.Message.Contains("has joined #gameroom1"))), Times.Once);
+            mockPlayers[2].Verify(
+                x => x.Send(It.Is<ChatMessage>(m => m.Message.Contains("has joined #gameroom1"))), Times.Once);
+
+            server.Clear();
+        }
+
+        [Fact]
+        public async Task ShouldSendMessageToGameRoomPlayers()
+        {
+            var server = Services.GetRequiredService<IServerConnection>();
+            var testingScenarioBuilder = new TestingScenarioBuilder(DbContext);
+            var mockPlayers = (await testingScenarioBuilder.BuildScenarioWith3PlayersAndGameRoom(server)).ToList();
+
+            var sut = Services.GetRequiredService<IGameService>();
+            _ = await sut.NewCommand(mockPlayers[1].Object.Id, "hey all");
+
+            mockPlayers[0].Verify(
+                x => x.Send(It.Is<ChatMessage>(m => m.Message.Contains("hey all"))), Times.Never);
+            mockPlayers[1].Verify(
+                x => x.Send(It.Is<ChatMessage>(m => m.Message.Contains("hey all"))), Times.Once);
+            mockPlayers[2].Verify(
+                x => x.Send(It.Is<ChatMessage>(m => m.Message.Contains("hey all"))), Times.Once);
+
+            server.Clear();
+        }
+
+        [Fact]
+        public async Task ShouldLeaveGameRoom()
+        {
+            var server = Services.GetRequiredService<IServerConnection>();
+            var testingScenarioBuilder = new TestingScenarioBuilder(DbContext);
+            var mockPlayers = (await testingScenarioBuilder.BuildScenarioWith3PlayersAndGameRoom(server)).ToList();
+
+            var sut = Services.GetRequiredService<IGameService>();
+            _ = await sut.NewCommand(mockPlayers[1].Object.Id, @"\c general");
+
+            var gameroom = DbContext.GameRooms.Single(x => x.Name == "gameroom1");
+            Assert.DoesNotContain(mockPlayers[1].Object.Id, gameroom.Players.Select(x => x.Id));
 
             server.Clear();
         }

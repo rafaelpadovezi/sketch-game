@@ -65,6 +65,7 @@ namespace Tests.Support
             // testing migrations
             var dbConnectionString = Configuration.GetConnectionString("DBConnection");
             var options = new DbContextOptionsBuilder<SketchDbContext>()
+                .UseLazyLoadingProxies()
                 .UseNpgsql(dbConnectionString)
                 .Options;
 

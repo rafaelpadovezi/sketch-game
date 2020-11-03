@@ -53,19 +53,23 @@ namespace Sketch.Extensions
                                 }
                             }
 
-                            using var scope = context.RequestServices.CreateScope();
-                            var service = scope.ServiceProvider.GetService<IGameService>();
-
                             if (!connection.IsConnected)
                             {
-                                logger.LogInformation("Player disconnected");
-                                await service.PlayerLeaves(connection.Id);
                                 break;
                             }
 
+                            using var scope = context.RequestServices.CreateScope();
+                            var service = scope.ServiceProvider.GetService<IGameService>();
                             exitCommand = await service.NewCommand(connection.Id, commandString);
                         }
 
+                        using (var scope = context.RequestServices.CreateScope())
+                        {
+                            var service = scope.ServiceProvider.GetService<IGameService>();
+                            await service.PlayerLeaves(connection.Id);
+                        }
+
+                        logger.LogInformation("Player disconnected");
                         server.RemovePlayerConnection(connection);
                     }
                     else

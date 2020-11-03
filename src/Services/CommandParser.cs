@@ -9,7 +9,7 @@ namespace Sketch.Services
         public string Message { get; set; } = string.Empty;
         public DestinataryType DestinataryType { get; set; }
         public string Destinatary { get; set; } = string.Empty;
-        public string ChatRoomName { get; set; } = string.Empty;
+        public string GameRoomName { get; set; } = string.Empty;
     }
 
     public enum CommandType
@@ -18,7 +18,7 @@ namespace Sketch.Services
         PublicMessageToUser,
         PrivateMessageToUser,
         ListChatRooms,
-        ChangeChatRoom,
+        ChangeGameRoom,
 
         Kudos,
         Exit,
@@ -124,8 +124,8 @@ namespace Sketch.Services
 
             return new ChatCommand
             {
-                Type = CommandType.ChangeChatRoom,
-                ChatRoomName = chatRoomName
+                Type = CommandType.ChangeGameRoom,
+                GameRoomName = chatRoomName
             };
         }
 

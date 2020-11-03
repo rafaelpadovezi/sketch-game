@@ -37,6 +37,7 @@ namespace Sketch
                 .AddDbContext<SketchDbContext>(options =>
                 {
                     options
+                        .UseLazyLoadingProxies()
                         .UseNpgsql(Configuration.GetConnectionString("DBConnection"));
 
                     if (Env.IsDevelopment())
@@ -83,7 +84,7 @@ namespace Sketch
         }
 
         public static readonly ILoggerFactory ConsoleLoggerFactory
-            = LoggerFactory.Create(builder => { builder.AddConsole(); });
+            = LoggerFactory.Create(builder => { builder.AddDebug(); });
 
         public static void Migrate(IApplicationBuilder app, ILogger<Startup> logger, bool executeSeedDb = false)
         {

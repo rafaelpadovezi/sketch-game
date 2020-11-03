@@ -6,20 +6,13 @@
           <h2 class="title is-2">Sketch</h2>
         </div>
       </article>
-      <article class="tile is-child notification is-primary">
-        <div class="field">
-          <h3 class="title is-3">Rooms</h3>
-        </div>
-        <div class="select is-multiple is-fullwidth">
-          <select multiple style="height:300px">
-            <option v-for="(room, index) in gameRooms" v-bind:key="index">{{
-              room
-            }}</option>
-          </select>
-        </div>
+      <article class="tile is-child">
+        relogio
       </article>
 
-      <article class="tile is-child"></article>
+      <article class="tile is-child notification is-primary">
+        <div style="height:400px"></div>
+      </article>
     </div>
 
     <div class="tile is-6 is-parent is-vertical">
@@ -53,52 +46,22 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from "vuex";
-
 export default {
-  name: "GeneralRoom",
+  name: "GameRoom",
   data() {
     return {
+      messages: [],
       textInput: ""
     };
   },
-  mounted() {
-    if (!this.isConnected) this.$router.push("/");
-  },
-  computed: {
-    ...mapGetters("chat", {
-      messages: "messages",
-      isConnected: "isConnected",
-      gameRooms: "gameRooms"
-    })
-  },
   methods: {
-    ...mapActions("chat", ["sendMessage"]),
     onMessageInput() {
       if (this.textInput === "") return;
       this.sendMessage(this.textInput);
       this.textInput = "";
     }
-  },
-  watch: {
-    isConnected(isConnected) {
-      if (!isConnected) this.$router.push("/");
-    }
   }
 };
 </script>
 
-<style>
-.chat {
-  background: white;
-  height: 300px;
-  color: black;
-  overflow-y: scroll;
-}
-
-.textarea.message {
-  height: 50px;
-  color: black;
-  overflow-y: scroll;
-}
-</style>
+<style></style>

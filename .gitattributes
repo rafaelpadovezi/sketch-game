@@ -1,2 +1,4 @@
 *.sh eol=lf
 *.ps1 eol=lf
+*.js eol=lf
+*.vue eol=lf

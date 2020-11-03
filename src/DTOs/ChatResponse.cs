@@ -10,7 +10,8 @@ namespace Sketch.DTOs
         ChatMessage,
         Error,
         ListGameRooms,
-        Help
+        Help,
+        EnterGameRoom
     }
 
     public class ChatServerResponse
@@ -39,6 +40,13 @@ namespace Sketch.DTOs
                 Type = ResponseType.Error,
                 Message = message
             };
+
+        internal static ChatServerResponse EnterGameRoom(string name) =>
+            new ChatServerResponse
+            {
+                Type = ResponseType.EnterGameRoom,
+                Details = new string[] { name }
+            };
     }
 
     public class ChatMessage : ChatServerResponse
@@ -52,6 +60,12 @@ namespace Sketch.DTOs
             new ChatMessage
             {
                 Message = $"{nickname} says: {message}"
+            };
+
+        public static ChatMessage ChangeRoom(string nickname, string gameRoom) =>
+            new ChatMessage
+            {
+                Message = $"{nickname} went to {gameRoom}"
             };
 
         public static ChatMessage Kudos(string source, string destinatary) =>

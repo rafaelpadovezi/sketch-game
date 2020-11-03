@@ -28,7 +28,7 @@ namespace Tests.Support
             return player;
         }
 
-        public async Task<IEnumerable<Mock<IPlayerConnection>>> BuildScenarioWith3ConnectedPlayers(
+        public async Task<IList<Mock<IPlayerConnection>>> BuildScenarioWith3ConnectedPlayers(
             IServerConnection server)
         {
             var players = new List<Player>()
@@ -42,13 +42,44 @@ namespace Tests.Support
 
             await _context.SaveChangesAsync();
 
-            var mocks = players.Select(x =>
+            var mocks = players.Select(x => CreateMockPlayer(x)).ToList();
+            foreach (var mock in mocks)
             {
-                var mock = new Mock<IPlayerConnection>();
-                mock.Setup(m => m.Id).Returns(x.Id);
-                mock.Setup(m => m.IsConnected).Returns(true);
-                return mock;
-            }).ToList();
+                server.AddPlayerConnection(mock.Object);
+            }
+
+            return mocks;
+        }
+
+        private static Mock<IPlayerConnection> CreateMockPlayer(Player player)
+        {
+            var mock = new Mock<IPlayerConnection>();
+            mock.Setup(m => m.Id).Returns(player.Id);
+            mock.Setup(m => m.IsConnected).Returns(true);
+            return mock;
+        }
+
+        public async Task<IList<Mock<IPlayerConnection>>> BuildScenarioWith3PlayersAndGameRoom(
+            IServerConnection server)
+        {
+            var players = new List<Player>()
+            {
+                new Player { Username = "Player1" },
+                new Player { Username = "Player2" },
+                new Player { Username = "Player3" }
+            };
+            var gameRoom = new GameRoom
+            {
+                Name = "gameroom1",
+                Players = new List<Player> { players[1], players[2] }
+            };
+
+            _context.AddRange(players);
+            _context.Add(gameRoom);
+
+            await _context.SaveChangesAsync();
+
+            var mocks = players.Select(x => CreateMockPlayer(x)).ToList();
             foreach (var mock in mocks)
             {
                 server.AddPlayerConnection(mock.Object);

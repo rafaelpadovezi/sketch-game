@@ -8,15 +8,15 @@ namespace Sketch.Models
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public GameRoomType Type { get; set; }
-        public ICollection<Player> Players { get; set; } = new List<Player>();
-        public ICollection<Round> Rounds { get; set; } = new List<Round>();
+        public virtual ICollection<Player> Players { get; set; } = new List<Player>();
+        public virtual ICollection<Round> Rounds { get; set; } = new List<Round>();
     }
 
     public class Round : BaseEntity
     {
         public Guid GameRoomId { get; set; }
         public int Count { get; set; }
-        public ICollection<Turn> Turns { get; set; } = new List<Turn>();
+        public virtual ICollection<Turn> Turns { get; set; } = new List<Turn>();
     }
 
     public class Turn : BaseEntity
@@ -24,14 +24,14 @@ namespace Sketch.Models
         public Guid RoundId { get; set; }
         public Guid DrawingPlayerId { get; set; }
         public Guid WordId { get; set; }
-        public Word Word { get; set; } = new Word();
-        public ICollection<PlayerTurn> PlayersTurns { get; set; } = new List<PlayerTurn>();
+        public virtual Word Word { get; set; } = new Word();
+        public virtual ICollection<PlayerTurn> PlayersTurns { get; set; } = new List<PlayerTurn>();
     }
 
     public class Word : BaseEntity
     {
         public string Content { get; set; } = string.Empty;
-        public GameRoomType GameRoomType { get; set; }
+        public virtual GameRoomType GameRoomType { get; set; }
     }
 
     public enum GameRoomType

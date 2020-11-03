@@ -14,22 +14,20 @@ namespace Sketch.Services
         Task PlayerEnters(Guid playerId);
         Task PlayerLeaves(Guid playerId);
         Task PlayerSendMessage(Guid playerId, string message);
+        Task PlayerEntersGameRoom(Player player, GameRoom gameroom);
     }
 
     public class GeneralRoom : IGeneralRoom
     {
         public string Name { get; } = "general";
         private readonly IRepository<Player> _playerRepository;
-        private readonly IRepository<GameRoom> _gameRoomReposuitory;
         private readonly IServerConnection _serverConnection;
 
         public GeneralRoom(
             IRepository<Player> playerRepository,
-            IRepository<GameRoom> gameRoomReposuitory,
             IServerConnection serverConnection)
         {
             _playerRepository = playerRepository;
-            _gameRoomReposuitory = gameRoomReposuitory;
             _serverConnection = serverConnection;
         }
 
@@ -37,7 +35,11 @@ namespace Sketch.Services
         {
             var player = await _playerRepository.GetById(playerId)
                 ?? throw new Exception("Player not found");
+            player.GameRoomId = null;
+
             await SendAll(ChatMessage.NewPlayer(Name, player.Username));
+
+            await _playerRepository.SaveChanges();
         }
 
         public async Task PlayerLeaves(Guid playerId)
@@ -65,6 +67,11 @@ namespace Sketch.Services
                 .GetAll(x => x.IsActive && !x.GameRoomId.HasValue);
 
             await _serverConnection.Send(response, players);
+        }
+
+        public async Task PlayerEntersGameRoom(Player player, GameRoom gameroom)
+        {
+            await SendAll(ChatMessage.ChangeRoom(player.Username, gameroom.Name));
         }
     }
 }
