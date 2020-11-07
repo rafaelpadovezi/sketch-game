@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
+using Sketch.Business;
 using Sketch.DTOs;
 using Sketch.Infrastructure.Connection;
 using Sketch.Infrastructure.Database.Repositories.Interfaces;
+using Sketch.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,20 +17,23 @@ namespace Sketch.Services
         private readonly IPlayerRepository _playerRepository;
         private readonly IGameRoomRepository _gameRoomRepository;
         private readonly IServerConnection _server;
-        private readonly IMapper _mapper;
+        private readonly IWordService _wordService;
+        private readonly SketchGame _sketchGame;
         private readonly ILogger<GameRoomService> _logger;
 
         public GameRoomService(
             IPlayerRepository playerRepository,
             IGameRoomRepository gameRoomRepository,
             IServerConnection server,
-            IMapper mapper,
+            IWordService wordService,
+            SketchGame sketchGame,
             ILogger<GameRoomService> logger)
         {
             _playerRepository = playerRepository;
             _gameRoomRepository = gameRoomRepository;
             _server = server;
-            _mapper = mapper;
+            _wordService = wordService;
+            _sketchGame = sketchGame;
             _logger = logger;
         }
 
@@ -38,7 +43,15 @@ namespace Sketch.Services
                 ?? throw new Exception($"GameRoom '{gameRoomName}' not found");
             player.GameRoomId = gameroom.Id;
             gameroom.Players.Add(player);
+
+            if (gameroom.Players.Count == 2)
+            {
+                var word = await _wordService.GetWord(gameroom.Type);
+                gameroom.Rounds = _sketchGame.InitGame(player, gameroom, word);
+            }
+
             await _gameRoomRepository.SaveChanges();
+
             await _server.Send(ChatServerResponse.EnterGameRoom(gameroom.Name), player);
             await SendGameRoomMessage(ChatMessage.NewPlayer(gameroom.Name, player.Username), player, gameroom);
         }

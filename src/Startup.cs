@@ -147,6 +147,7 @@ namespace Sketch
                 new Word { Content = "blasted-ended skrewt", GameRoomType = GameRoomType.HarryPotter },
                 new Word { Content = "Wingardium Leviosa", GameRoomType = GameRoomType.HarryPotter },
             };
+            context.AddRange(player);
             context.AddRange(gameRooms);
             context.AddRange(words);
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Sketch.Infrastructure.Connection;
 using System;
 using System.Net.Http;
 
@@ -19,6 +20,7 @@ namespace Tests.Support
         // properties used by testing classes
         protected readonly HttpClient Client;
         protected SketchDbContext DbContext { get; }
+        protected IServerConnection Server { get; }
 
         protected TestingCaseFixture()
         {
@@ -32,6 +34,7 @@ namespace Tests.Support
 
             // resolve a DbContext instance from the container and begin a transaction on the context.
             Client = server.CreateClient();
+            Server = Services.GetRequiredService<IServerConnection>();
             DbContext = Services.GetRequiredService<SketchDbContext>();
             _transaction = DbContext.Database.BeginTransaction();
         }

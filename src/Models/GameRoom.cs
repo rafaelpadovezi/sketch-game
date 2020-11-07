@@ -24,6 +24,8 @@ namespace Sketch.Models
         public Guid RoundId { get; set; }
         public Guid DrawingPlayerId { get; set; }
         public Guid WordId { get; set; }
+        public DateTime StartTimestamp { get; set; }
+        public DateTime? EndTimestamp { get; set; }
         public virtual Word Word { get; set; } = new Word();
         public virtual ICollection<PlayerTurn> PlayersTurns { get; set; } = new List<PlayerTurn>();
     }
@@ -31,7 +33,7 @@ namespace Sketch.Models
     public class Word : BaseEntity
     {
         public string Content { get; set; } = string.Empty;
-        public virtual GameRoomType GameRoomType { get; set; }
+        public GameRoomType GameRoomType { get; set; }
     }
 
     public enum GameRoomType

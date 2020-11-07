@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Sketch.Business;
 using Sketch.Infrastructure.Connection;
 using Sketch.Infrastructure.Database;
 using Sketch.Infrastructure.Database.Repositories;
@@ -20,6 +21,8 @@ namespace Sketch.Infrastructure.IoC
                 .AddScoped<IGeneralRoomService, GeneralRoomService>()
                 .AddScoped<IGameRoomService, GameRoomService>()
                 .AddScoped<IGameService, GameService>()
+                .AddScoped<IWordService, WordService>()
+                .AddScoped<SketchGame>()
                 .AddSingleton<IServerConnection, ServerConnection>();
         }
     }

@@ -64,7 +64,7 @@ namespace Sketch.DTOs
         public static ChatMessage ChangeRoom(string nickname, string gameRoom) =>
             new ChatMessage
             {
-                Message = $"{nickname} went to {gameRoom}"
+                Message = $"{nickname} went to #{gameRoom}"
             };
 
         public static ChatMessage Kudos(string source, string destinatary) =>
