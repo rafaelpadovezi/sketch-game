@@ -12,7 +12,8 @@ namespace Sketch.Services
 {
     public class GameService : IGameService
     {
-        private readonly IGeneralRoom _generalRoom;
+        private readonly IGeneralRoomService _generalRoomService;
+        private readonly IGameRoomService _gameRoomService;
         private readonly IPlayerRepository _playerRepository;
         private readonly IGameRoomRepository _gameRoomRepository;
         private readonly IServerConnection _server;
@@ -20,14 +21,16 @@ namespace Sketch.Services
         private readonly ILogger<GameService> _logger;
 
         public GameService(
-            IGeneralRoom generalRoom,
+            IGeneralRoomService generalRoomService,
+            IGameRoomService gameRoomService,
             IPlayerRepository playerRepository,
             IGameRoomRepository gameRoomRepository,
             IServerConnection server,
             IMapper mapper,
             ILogger<GameService> logger)
         {
-            _generalRoom = generalRoom;
+            _generalRoomService = generalRoomService;
+            _gameRoomService = gameRoomService;
             _playerRepository = playerRepository;
             _gameRoomRepository = gameRoomRepository;
             _server = server;
@@ -35,9 +38,7 @@ namespace Sketch.Services
             _logger = logger;
         }
 
-        [SuppressMessage("StyleCop.CSharp.LayoutRules", "SA1503:Braces should not be omitted", Justification = "<Pending>")]
-        [SuppressMessage("StyleCop.CSharp.LayoutRules", "SA1508:Closing braces should not be preceded by blank line", Justification = "<Pending>")]
-        [SuppressMessage("StyleCop.CSharp.LayoutRules", "SA1513:Closing brace should be followed by blank line", Justification = "<Pending>")]
+        [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1025:Code should not contain multiple whitespace in a row", Justification = "<Pending>")]
         public async Task<bool> NewCommand(Guid playerId, string commandString)
         {
             _logger.LogInformation("Received {commandString} from ", commandString);
@@ -47,82 +48,65 @@ namespace Sketch.Services
             var player = await _playerRepository.GetById(playerId)
                     ?? throw new Exception("Player not found");
 
-            if (command.Type == CommandType.PublicMessage)
+            var commandTask = command.Type switch
             {
-                if (player.GameRoomId.HasValue)
-                {
-                    await SendGameRoomMessage(commandString, player);
-                }
-                else
-                {
-                    await _generalRoom.PlayerSendMessage(playerId, command.Message);
-                }
-            }
-            if (command.Type == CommandType.ChangeGameRoom)
-            {
-                if (player.GameRoomId.HasValue && command.GameRoomName == "general")
-                {
-                    var gameRoom = (await _gameRoomRepository.GetById(player.GameRoomId.Value))
-                        ?? throw new Exception($"GameRoom '{player.GameRoomId}' not found");
-                    await SendGameRoomMessage(ChatMessage.ChangeRoom(player.Username, "general"), player, gameRoom);
-                    await _server.Send(ChatServerResponse.EnterGameRoom("general"), player);
-                    await _generalRoom.PlayerEnters(playerId);
-                }
-                else
-                {
-                    await ChangeGameRoom(command, player);
-                }
-            }
-            if (command.Type == CommandType.ListChatRooms)
-            {
-                var gameRooms = (await _gameRoomRepository.GetAll(_ => true))
-                    .Select(x => _mapper.Map<GameRoomViewModel>(x));
-                await _server.Send(ChatServerResponse.ListChatRooms(gameRooms), player);
-            }
+                CommandType.PublicMessage  => SendMessage(playerId, commandString, command, player),
+                CommandType.ChangeGameRoom => ChangeGameRoom(playerId, command, player),
+                CommandType.ListChatRooms  => ListGameRooms(player),
+                _ => Task.CompletedTask
+            };
+
+            await commandTask;
 
             return command.Type == CommandType.Exit;
         }
 
+        private async Task ListGameRooms(Models.Player player)
+        {
+            var gameRooms = (await _gameRoomRepository.GetAll(_ => true))
+                .Select(x => _mapper.Map<GameRoomViewModel>(x));
+            await _server.Send(ChatServerResponse.ListChatRooms(gameRooms), player);
+        }
+
+        private async Task ChangeGameRoom(Guid playerId, ChatCommand command, Models.Player player)
+        {
+            if (player.GameRoomId.HasValue && command.GameRoomName == _generalRoomService.Name)
+            {
+                await _gameRoomService.LeaveGameRoom(player, _generalRoomService.Name);
+                await _generalRoomService.Enter(playerId);
+            }
+            else
+            {
+                await ChangeGameRoom(command, player);
+            }
+        }
+
+        private async Task SendMessage(Guid playerId, string commandString, ChatCommand command, Models.Player player)
+        {
+            if (player.GameRoomId.HasValue)
+            {
+                await _gameRoomService.SendMessage(commandString, player);
+            }
+            else
+            {
+                await _generalRoomService.PlayerSendMessage(playerId, command.Message);
+            }
+        }
+
         private async Task ChangeGameRoom(ChatCommand command, Models.Player player)
         {
-            var gameroom = await _gameRoomRepository.Get(x => x.Name == command.GameRoomName)
-                ?? throw new Exception($"GameRoom '{command.GameRoomName}' not found");
-            player.GameRoomId = gameroom.Id;
-            gameroom.Players.Add(player);
-            await _generalRoom.PlayerEntersGameRoom(player, gameroom);
-            await _gameRoomRepository.SaveChanges();
-            await _server.Send(ChatServerResponse.EnterGameRoom(gameroom.Name), player);
-            await SendGameRoomMessage(ChatMessage.NewPlayer(gameroom.Name, player.Username), player, gameroom);
-        }
-
-        private async Task SendGameRoomMessage(string message, Models.Player player)
-        {
-            var gameRoom = await _gameRoomRepository.Get(x => x.Id == player.GameRoomId)
-                ?? throw new Exception($"GameRoom '{player.GameRoomId}' not found");
-            await SendGameRoomMessage(ChatMessage.Public(player.Username, message), player, gameRoom);
-        }
-
-        private async Task SendGameRoomMessage(ChatMessage message, Models.Player player, Models.GameRoom gameRoom)
-        {
-            var gameRoomPlayers = await _playerRepository.GetAll(x => x.GameRoomId == gameRoom.Id);
-            await _server.Send(message, gameRoomPlayers);
+            await _gameRoomService.EnterGameRoom(command.GameRoomName, player);
+            await _generalRoomService.LeaveToGameRoom(player, command.GameRoomName);
         }
 
         public async Task NewPlayer(Guid playerId)
         {
-            await _generalRoom.PlayerEnters(playerId);
+            await _generalRoomService.Enter(playerId);
         }
 
         public async Task PlayerLeaves(Guid playerId)
         {
-            await _generalRoom.PlayerLeaves(playerId);
+            await _generalRoomService.PlayerLeaves(playerId);
         }
-    }
-
-    public interface IGameService
-    {
-        Task NewPlayer(Guid playerId);
-        Task<bool> NewCommand(Guid playerId, string commandString);
-        Task PlayerLeaves(Guid playerId);
     }
 }

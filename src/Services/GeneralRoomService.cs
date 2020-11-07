@@ -7,23 +7,22 @@ using System.Threading.Tasks;
 
 namespace Sketch.Services
 {
-    public interface IGeneralRoom
+    public interface IGeneralRoomService
     {
         string Name { get; }
-
-        Task PlayerEnters(Guid playerId);
+        Task Enter(Guid playerId);
         Task PlayerLeaves(Guid playerId);
         Task PlayerSendMessage(Guid playerId, string message);
-        Task PlayerEntersGameRoom(Player player, GameRoom gameroom);
+        Task LeaveToGameRoom(Player player, string gameroom);
     }
 
-    public class GeneralRoom : IGeneralRoom
+    public class GeneralRoomService : IGeneralRoomService
     {
         public string Name { get; } = "general";
         private readonly IRepository<Player> _playerRepository;
         private readonly IServerConnection _serverConnection;
 
-        public GeneralRoom(
+        public GeneralRoomService(
             IRepository<Player> playerRepository,
             IServerConnection serverConnection)
         {
@@ -31,7 +30,7 @@ namespace Sketch.Services
             _serverConnection = serverConnection;
         }
 
-        public async Task PlayerEnters(Guid playerId)
+        public async Task Enter(Guid playerId)
         {
             var player = await _playerRepository.GetById(playerId)
                 ?? throw new Exception("Player not found");
@@ -68,9 +67,9 @@ namespace Sketch.Services
             await _serverConnection.Send(response, players);
         }
 
-        public async Task PlayerEntersGameRoom(Player player, GameRoom gameroom)
+        public async Task LeaveToGameRoom(Player player, string gameroom)
         {
-            await SendAll(ChatMessage.ChangeRoom(player.Username, gameroom.Name));
+            await SendAll(ChatMessage.ChangeRoom(player.Username, gameroom));
         }
     }
 }
