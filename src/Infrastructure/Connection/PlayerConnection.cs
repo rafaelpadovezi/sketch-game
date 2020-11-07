@@ -24,7 +24,7 @@ namespace Sketch.Infrastructure.Connection
             await WebSocket.SendJsonAsync(serverResponse);
 
         public async Task<string> ReceiveString() =>
-            await WebSocket.ReceiveStringAsync();
+            (await WebSocket.ReceiveStringAsync()).Trim();
     }
 
     public interface IPlayerConnection

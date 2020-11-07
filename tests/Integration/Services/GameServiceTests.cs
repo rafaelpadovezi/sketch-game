@@ -163,6 +163,12 @@ namespace Tests.Integration.Services
 
             var gameroom = DbContext.GameRooms.Single(x => x.Name == "gameroom1");
             Assert.DoesNotContain(mockPlayers[1].Object.Id, gameroom.Players.Select(x => x.Id));
+            mockPlayers[0].Verify(
+                x => x.Send(It.Is<ChatMessage>(m => m.Message.Contains("has joined #general"))), Times.Once);
+            mockPlayers[1].Verify(
+                x => x.Send(It.Is<ChatMessage>(m => m.Message.Contains("has joined #general"))), Times.Once);
+            mockPlayers[2].Verify(
+                x => x.Send(It.Is<ChatMessage>(m => m.Message.Contains("has joined #general"))), Times.Never);
 
             server.Clear();
         }

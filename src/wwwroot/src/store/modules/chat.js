@@ -44,7 +44,8 @@ export default {
     [CHANGE_ROOM](state, room) {
       state.gameRoom = room;
       state.messages.length = 0;
-      router.push(`/gameroom`);
+      if (room === "general") router.push(`/general`);
+      else router.push(`/gameroom`);
     }
   },
   actions: {
@@ -64,6 +65,9 @@ export default {
         case 4:
           commit(CHANGE_ROOM, serverResponse.details[0]);
       }
+    },
+    goToGeneral({ dispatch }) {
+      dispatch("sendMessage", `\\c general`);
     },
     changeGameRoom({ dispatch }, gameRoom) {
       dispatch("sendMessage", `\\c ${gameRoom.name}`);

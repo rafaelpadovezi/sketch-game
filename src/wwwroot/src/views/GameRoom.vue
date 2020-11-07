@@ -7,8 +7,17 @@
         </div>
       </article>
       <article class="tile is-child">
-        <h2>{{ gameRoom }}</h2>
-        <div>{{ round.timer }}</div>
+        <div class="columns">
+          <div class="column is-1">
+            <span class="icon is-large is-clickable" @click="onGoBack()">
+              <i class="fas fa-arrow-left "></i>
+            </span>
+          </div>
+          <div class="column">
+            <h2>{{ gameRoom }}</h2>
+            <div>{{ round.timer }}</div>
+          </div>
+        </div>
       </article>
 
       <article class="tile is-child notification is-primary">
@@ -59,7 +68,7 @@ export default {
   data() {
     return {
       round: {
-        timer: 60 * 1_000
+        timer: 100
       },
       textInput: ""
     };
@@ -71,11 +80,14 @@ export default {
     })
   },
   methods: {
-    ...mapActions("chat", ["sendMessage"]),
+    ...mapActions("chat", ["sendMessage", "goToGeneral"]),
     onMessageInput() {
       if (this.textInput === "") return;
       this.sendMessage(this.textInput);
       this.textInput = "";
+    },
+    onGoBack() {
+      this.goToGeneral();
     }
   }
 };

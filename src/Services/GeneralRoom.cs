@@ -36,10 +36,9 @@ namespace Sketch.Services
             var player = await _playerRepository.GetById(playerId)
                 ?? throw new Exception("Player not found");
             player.GameRoomId = null;
+            await _playerRepository.SaveChanges();
 
             await SendAll(ChatMessage.NewPlayer(Name, player.Username));
-
-            await _playerRepository.SaveChanges();
         }
 
         public async Task PlayerLeaves(Guid playerId)

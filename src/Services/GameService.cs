@@ -62,6 +62,10 @@ namespace Sketch.Services
             {
                 if (player.GameRoomId.HasValue && command.GameRoomName == "general")
                 {
+                    var gameRoom = (await _gameRoomRepository.GetById(player.GameRoomId.Value))
+                        ?? throw new Exception($"GameRoom '{player.GameRoomId}' not found");
+                    await SendGameRoomMessage(ChatMessage.ChangeRoom(player.Username, "general"), player, gameRoom);
+                    await _server.Send(ChatServerResponse.EnterGameRoom("general"), player);
                     await _generalRoom.PlayerEnters(playerId);
                 }
                 else
