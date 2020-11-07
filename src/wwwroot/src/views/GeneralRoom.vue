@@ -12,9 +12,12 @@
         </div>
         <div class="select is-multiple is-fullwidth">
           <select multiple style="height:300px">
-            <option v-for="(room, index) in gameRooms" v-bind:key="index">{{
-              room
-            }}</option>
+            <option
+              v-for="room in gameRooms"
+              :key="room.id"
+              @click="onChangeRoom(room)"
+              >{{ room.name }}</option
+            >
           </select>
         </div>
       </article>
@@ -73,11 +76,14 @@ export default {
     })
   },
   methods: {
-    ...mapActions("chat", ["sendMessage"]),
+    ...mapActions("chat", ["sendMessage", "changeGameRoom"]),
     onMessageInput() {
       if (this.textInput === "") return;
       this.sendMessage(this.textInput);
       this.textInput = "";
+    },
+    onChangeRoom(room) {
+      this.changeGameRoom(room);
     }
   },
   watch: {

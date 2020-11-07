@@ -7,11 +7,14 @@
         </div>
       </article>
       <article class="tile is-child">
-        relogio
+        <h2>{{ gameRoom }}</h2>
+        <div>{{ round.timer }}</div>
       </article>
 
       <article class="tile is-child notification is-primary">
-        <div style="height:400px"></div>
+        <div style="">
+          <Canvas :canvas-id="gameRoom" height="400" />
+        </div>
       </article>
     </div>
 
@@ -46,15 +49,29 @@
 </template>
 
 <script>
+import Canvas from "@/components/Canvas.vue";
+
+import { mapActions, mapGetters } from "vuex";
+
 export default {
   name: "GameRoom",
+  components: { Canvas },
   data() {
     return {
-      messages: [],
+      round: {
+        timer: 60 * 1_000
+      },
       textInput: ""
     };
   },
+  computed: {
+    ...mapGetters("chat", {
+      messages: "messages",
+      gameRoom: "gameRoom"
+    })
+  },
   methods: {
+    ...mapActions("chat", ["sendMessage"]),
     onMessageInput() {
       if (this.textInput === "") return;
       this.sendMessage(this.textInput);

@@ -93,11 +93,11 @@ namespace Tests.Unit
         [Fact]
         public void ShouldParseChangeGameRoom()
         {
-            var command = CommandParser.Parse(@"\c gameroom");
+            var command = CommandParser.Parse(@"\c gameroom 1");
 
             Assert.Equal(CommandType.ChangeGameRoom, command.Type);
             Assert.Equal(DestinataryType.Self, command.DestinataryType);
-            Assert.Equal("gameroom", command.GameRoomName);
+            Assert.Equal("gameroom 1", command.GameRoomName);
         }
 
         [Fact]

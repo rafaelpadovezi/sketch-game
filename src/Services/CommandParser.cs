@@ -116,7 +116,8 @@ namespace Sketch.Services
                 return ChatRoomError;
             }
 
-            string chatRoomName = commandString.Split(Separator)[1];
+            string chatRoomName = commandString
+                .Substring(commandString.IndexOf(Separator) + 1);
             if (!chatRoomName.Any())
             {
                 return ChatRoomError;

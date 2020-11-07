@@ -9,10 +9,15 @@ namespace Sketch.Extensions
 {
     public static class WebSocketExtensions
     {
+        private static JsonSerializerOptions _options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        };
+
         public static async Task SendJsonAsync<T>(this WebSocket webSocket,
             T result, CancellationToken cancelationToken = default)
         {
-            string jsonMessage = JsonSerializer.Serialize(result);
+            string jsonMessage = JsonSerializer.Serialize(result, _options);
             await webSocket.SendStringAsync(jsonMessage, cancelationToken);
         }
 
@@ -32,7 +37,7 @@ namespace Sketch.Extensions
             this WebSocket websSocket)
         {
             var message = await websSocket.ReceiveStringAsync();
-            return JsonSerializer.Deserialize<T>(message);
+            return JsonSerializer.Deserialize<T>(message, _options);
         }
 
         public static async Task<string> ReceiveStringAsync(

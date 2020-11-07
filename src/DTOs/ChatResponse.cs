@@ -1,7 +1,6 @@
 ﻿using Sketch.Services;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Sketch.DTOs
 {
@@ -18,7 +17,7 @@ namespace Sketch.DTOs
     {
         public string Message { get; protected set; } = string.Empty;
         public ResponseType Type { get; protected set; }
-        public string[] Details { get; protected set; } = Array.Empty<string>();
+        public IEnumerable<object> Details { get; protected set; } = Array.Empty<string>();
 
         public static ChatServerResponse Help() =>
             new ChatServerResponse
@@ -27,11 +26,11 @@ namespace Sketch.DTOs
                 Details = CommandParser.CommandList
             };
 
-        internal static ChatServerResponse ListChatRooms(IEnumerable<string> chatRoomList) =>
+        internal static ChatServerResponse ListChatRooms(IEnumerable<GameRoomViewModel> chatRoomList) =>
             new ChatServerResponse
             {
                 Type = ResponseType.ListGameRooms,
-                Details = chatRoomList.ToArray()
+                Details = chatRoomList
             };
 
         public static ChatServerResponse Error(string message) =>

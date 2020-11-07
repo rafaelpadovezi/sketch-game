@@ -9,6 +9,8 @@ const LOGIN = "LOGIN";
 const DISCONNECT = "DISCONNECT";
 const SET_GAME_ROOMS = "SET_GAME_ROOMS";
 
+const CHANGE_ROOM = "CHANGE_ROOM";
+
 export default {
   strict: process.env.NODE_ENV !== "production",
   namespaced: true,
@@ -17,7 +19,8 @@ export default {
     gameRooms: [],
     messages: [],
     player: undefined,
-    isConnected: false
+    isConnected: false,
+    gameRoom: undefined
   },
   mutations: {
     [ADD_MESSAGE](state, message) {
@@ -37,6 +40,11 @@ export default {
     [SET_GAME_ROOMS](state, gameRooms) {
       state.gameRooms.length = 0;
       state.gameRooms.push(...gameRooms);
+    },
+    [CHANGE_ROOM](state, room) {
+      state.gameRoom = room;
+      state.messages.length = 0;
+      router.push(`/gameroom`);
     }
   },
   actions: {
@@ -46,16 +54,19 @@ export default {
     onMessage({ commit }, response) {
       const serverResponse = JSON.parse(response.data);
 
-      switch (serverResponse.Type) {
+      switch (serverResponse.type) {
         case 0:
-          commit(ADD_MESSAGE, serverResponse.Message);
+          commit(ADD_MESSAGE, serverResponse.message);
           break;
         case 2:
-          commit(SET_GAME_ROOMS, serverResponse.Details);
+          commit(SET_GAME_ROOMS, serverResponse.details);
           break;
-        case 3:
-          router.push(`/gameroom/${serverResponse.Details}`);
+        case 4:
+          commit(CHANGE_ROOM, serverResponse.details[0]);
       }
+    },
+    changeGameRoom({ dispatch }, gameRoom) {
+      dispatch("sendMessage", `\\c ${gameRoom.name}`);
     },
     async connect({ commit, dispatch }, player) {
       const socket = new WebSocket(WS_API);
@@ -89,6 +100,7 @@ export default {
   getters: {
     messages: state => state.messages,
     isConnected: state => state.isConnected,
-    gameRooms: state => state.gameRooms
+    gameRooms: state => state.gameRooms,
+    gameRoom: state => state.gameRoom
   }
 };

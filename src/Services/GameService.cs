@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AutoMapper;
+using Microsoft.Extensions.Logging;
 using Sketch.DTOs;
 using Sketch.Infrastructure.Connection;
 using Sketch.Infrastructure.Database.Repositories.Interfaces;
@@ -15,6 +16,7 @@ namespace Sketch.Services
         private readonly IPlayerRepository _playerRepository;
         private readonly IGameRoomRepository _gameRoomRepository;
         private readonly IServerConnection _server;
+        private readonly IMapper _mapper;
         private readonly ILogger<GameService> _logger;
 
         public GameService(
@@ -22,12 +24,14 @@ namespace Sketch.Services
             IPlayerRepository playerRepository,
             IGameRoomRepository gameRoomRepository,
             IServerConnection server,
+            IMapper mapper,
             ILogger<GameService> logger)
         {
             _generalRoom = generalRoom;
             _playerRepository = playerRepository;
             _gameRoomRepository = gameRoomRepository;
             _server = server;
+            _mapper = mapper;
             _logger = logger;
         }
 
@@ -67,7 +71,8 @@ namespace Sketch.Services
             }
             if (command.Type == CommandType.ListChatRooms)
             {
-                var gameRooms = (await _gameRoomRepository.GetAll(_ => true)).Select(x => x.Name);
+                var gameRooms = (await _gameRoomRepository.GetAll(_ => true))
+                    .Select(x => _mapper.Map<GameRoomViewModel>(x));
                 await _server.Send(ChatServerResponse.ListChatRooms(gameRooms), player);
             }
 
@@ -83,20 +88,20 @@ namespace Sketch.Services
             await _generalRoom.PlayerEntersGameRoom(player, gameroom);
             await _gameRoomRepository.SaveChanges();
             await _server.Send(ChatServerResponse.EnterGameRoom(gameroom.Name), player);
-            await SendGameRoomMessage($"\"{player.Username} has joined #{gameroom.Name}\"", player, gameroom);
+            await SendGameRoomMessage(ChatMessage.NewPlayer(gameroom.Name, player.Username), player, gameroom);
         }
 
         private async Task SendGameRoomMessage(string message, Models.Player player)
         {
             var gameRoom = await _gameRoomRepository.Get(x => x.Id == player.GameRoomId)
                 ?? throw new Exception($"GameRoom '{player.GameRoomId}' not found");
-            await SendGameRoomMessage(message, player, gameRoom);
+            await SendGameRoomMessage(ChatMessage.Public(player.Username, message), player, gameRoom);
         }
 
-        private async Task SendGameRoomMessage(string message, Models.Player player, Models.GameRoom gameRoom)
+        private async Task SendGameRoomMessage(ChatMessage message, Models.Player player, Models.GameRoom gameRoom)
         {
             var gameRoomPlayers = await _playerRepository.GetAll(x => x.GameRoomId == gameRoom.Id);
-            await _server.Send(ChatMessage.Public(player.Username, message), gameRoomPlayers);
+            await _server.Send(message, gameRoomPlayers);
         }
 
         public async Task NewPlayer(Guid playerId)

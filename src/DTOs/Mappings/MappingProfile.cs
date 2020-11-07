@@ -8,6 +8,7 @@ namespace Sketch.DTOs.Mappings
         public MappingProfile()
         {
             CreateMap<Player, PlayerViewModel>();
+            CreateMap<GameRoom, GameRoomViewModel>();
         }
     }
 }
