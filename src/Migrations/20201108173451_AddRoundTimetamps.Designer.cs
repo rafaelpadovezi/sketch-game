@@ -3,15 +3,17 @@ using System;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Sketch.Migrations
 {
     [DbContext(typeof(SketchDbContext))]
-    partial class SketchDbContextModelSnapshot : ModelSnapshot
+    [Migration("20201108173451_AddRoundTimetamps")]
+    partial class AddRoundTimetamps
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

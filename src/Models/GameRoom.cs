@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace Sketch.Models
 {
+
     public class GameRoom : BaseEntity
     {
         public string Name { get; set; } = string.Empty;
@@ -15,7 +16,9 @@ namespace Sketch.Models
     public class Round : BaseEntity
     {
         public Guid GameRoomId { get; set; }
-        public int Count { get; set; }
+        public int Count { get; set; } = 1;
+        public DateTime StartTimestamp { get; set; } = DateTime.Now;
+        public DateTime? EndTimestamp { get; set; }
         public virtual ICollection<Turn> Turns { get; set; } = new List<Turn>();
     }
 
@@ -24,7 +27,7 @@ namespace Sketch.Models
         public Guid RoundId { get; set; }
         public Guid DrawingPlayerId { get; set; }
         public Guid WordId { get; set; }
-        public DateTime StartTimestamp { get; set; }
+        public DateTime StartTimestamp { get; set; } = DateTime.Now;
         public DateTime? EndTimestamp { get; set; }
         public virtual Word Word { get; set; } = new Word();
         public virtual ICollection<PlayerTurn> PlayersTurns { get; set; } = new List<PlayerTurn>();

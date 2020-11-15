@@ -14,9 +14,12 @@ namespace Sketch.Models
 
     public class PlayerTurn : BaseEntity
     {
+        public virtual Player? Player { get; set; }
         public Guid PlayerId { get; set; }
         public Guid TurnId { get; set; }
         public int? Points { get; set; }
         public bool IsDrawing { get; set; } = false;
+
+        public bool Hit => !IsDrawing && (Points ?? 0) > 0;
     }
 }

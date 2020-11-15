@@ -34,7 +34,13 @@
 
       <article class="tile is-child notification is-primary">
         <div class="chat">
-          <p v-for="(message, index) in messages" :key="index">{{ message }}</p>
+          <p
+            v-for="(message, index) in messages"
+            :key="index"
+            :class="{ 'has-text-primary': message.hit }"
+          >
+            <span style="white-space: pre;">{{ message.content }}</span>
+          </p>
         </div>
       </article>
 
@@ -76,8 +82,12 @@ export default {
   computed: {
     ...mapGetters("chat", {
       messages: "messages",
-      gameRoom: "gameRoom"
+      gameRoom: "gameRoom",
+      isConnected: "isConnected"
     })
+  },
+  mounted() {
+    if (!this.isConnected) this.$router.push("/");
   },
   methods: {
     ...mapActions("chat", ["sendMessage", "goToGeneral"]),
@@ -89,8 +99,11 @@ export default {
     onGoBack() {
       this.goToGeneral();
     }
+  },
+  watch: {
+    isConnected(isConnected) {
+      if (!isConnected) this.$router.push("/");
+    }
   }
 };
 </script>
-
-<style></style>

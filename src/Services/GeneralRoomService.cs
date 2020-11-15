@@ -45,6 +45,7 @@ namespace Sketch.Services
             var player = await _playerRepository.GetById(playerId)
                 ?? throw new Exception("Player not found");
             player.IsActive = false;
+            player.GameRoomId = null;
 
             await SendAll(ChatMessage.PlayerLeftRoom(Name, player.Username));
 

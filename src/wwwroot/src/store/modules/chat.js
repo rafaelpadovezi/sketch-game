@@ -57,13 +57,33 @@ export default {
 
       switch (serverResponse.type) {
         case 0:
-          commit(ADD_MESSAGE, serverResponse.message);
+        case 6:
+        case 7:
+          commit(ADD_MESSAGE, {
+            content: serverResponse.message,
+            type: serverResponse.type
+          });
           break;
         case 2:
           commit(SET_GAME_ROOMS, serverResponse.details);
           break;
         case 4:
           commit(CHANGE_ROOM, serverResponse.details[0]);
+          break;
+        case 5: {
+          const { results } = serverResponse.details[0];
+          commit(ADD_MESSAGE, {
+            content:
+              "****************************\n" +
+              "Name".padEnd(18, " ") +
+              "Points\n" +
+              "****************************\n" +
+              Object.keys(results)
+                .map(key => key.padEnd(18, " ") + results[key])
+                .join("\n"),
+            type: serverResponse.type
+          });
+        }
       }
     },
     goToGeneral({ dispatch }) {

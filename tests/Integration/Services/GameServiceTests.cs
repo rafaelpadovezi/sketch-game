@@ -156,20 +156,22 @@ namespace Tests.Integration.Services
         public async Task ShouldStartTurnWhenPlayerEnterGameRoomWith1Player()
         {
             var mockNewPlayer = _scenario.MockPlayer1InGeneral;
+            var mockExistingPlayer = _scenario.MockPlayerAloneInGameRoom;
             string gameRoom = _scenario.GameRoomWith1Player.Name;
-            var existingPlayerId = _scenario.GameRoomWith1Player.Players.Single().Id;
 
             var sut = Services.GetRequiredService<IGameService>();
             _ = await sut.NewCommand(mockNewPlayer.Object.Id, $@"\c {gameRoom}");
 
             var gameroom = DbContext.GameRooms.Single(x => x.Name == gameRoom);
-            var turn = gameroom.Rounds.Single().Turns.Single();
-            var existingPlayerTurn = turn.PlayersTurns.ElementAt(0);
-            var newPlayerTurn = turn.PlayersTurns.ElementAt(1);
-            Assert.True(existingPlayerTurn.IsDrawing);
-            Assert.Equal(existingPlayerId, existingPlayerTurn.PlayerId);
-            Assert.False(newPlayerTurn.IsDrawing);
-            Assert.Equal(mockNewPlayer.Object.Id, newPlayerTurn.PlayerId);
+            Assert.Single(gameroom.Rounds);
+            mockExistingPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Message.Contains("Start drawing!"))),
+                    Times.Once);
+            mockNewPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Message.Contains($"is drawing"))),
+                    Times.Once);
         }
     }
 }

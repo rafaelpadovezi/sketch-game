@@ -5,6 +5,6 @@ namespace Sketch.Services
 {
     public interface IWordService
     {
-        Task<Word> GetWord(GameRoomType type);
+        Task<Word> PickWord(GameRoomType type);
     }
 }

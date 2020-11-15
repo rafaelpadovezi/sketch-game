@@ -1,13 +1,22 @@
-﻿using Sketch.Models;
+﻿using Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
+using Sketch.Models;
 using System.Threading.Tasks;
 
 namespace Sketch.Services
 {
     public class WordService : IWordService
     {
-        public Task<Word> GetWord(GameRoomType type)
+        private readonly SketchDbContext _context;
+
+        public WordService(SketchDbContext context)
         {
-            return Task.FromResult(new Word { Content = "Bola" });
+            _context = context;
+        }
+
+        public async Task<Word> PickWord(GameRoomType type)
+        {
+            return await _context.Words.FirstAsync();
         }
     }
 }

@@ -32,7 +32,9 @@
 
       <article class="tile is-child notification is-primary">
         <div class="chat">
-          <p v-for="(message, index) in messages" :key="index">{{ message }}</p>
+          <p v-for="(message, index) in messages" :key="index">
+            {{ message.content }}
+          </p>
         </div>
       </article>
 
@@ -100,6 +102,7 @@ export default {
   height: 300px;
   color: black;
   overflow-y: scroll;
+  font-family: "Roboto Mono", monospace;
 }
 
 .textarea.message {

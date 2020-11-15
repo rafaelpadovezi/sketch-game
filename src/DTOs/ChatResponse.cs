@@ -1,6 +1,8 @@
-﻿using Sketch.Services;
+﻿using Sketch.Models;
+using Sketch.Services;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Sketch.DTOs
 {
@@ -10,7 +12,10 @@ namespace Sketch.DTOs
         Error,
         ListGameRooms,
         Help,
-        EnterGameRoom
+        EnterGameRoom,
+        EndOfTurn,
+        Hit,
+        StartOfTurn
     }
 
     public class ChatServerResponse
@@ -45,6 +50,45 @@ namespace Sketch.DTOs
             {
                 Type = ResponseType.EnterGameRoom,
                 Details = new string[] { name }
+            };
+    }
+
+    public class GameResponse : ChatServerResponse
+    {
+        public static GameResponse EndOfTurn(Turn turn) =>
+            new GameResponse
+            {
+                Type = ResponseType.EndOfTurn,
+                Details = new RankingViewModel[]
+                {
+                    new RankingViewModel
+                    {
+                        Results = turn.PlayersTurns
+                            .OrderBy(x => x.Points)
+                            .ToDictionary(x => x.Player.Username, x => x.Points ?? 0)
+                    }
+                }
+            };
+
+        internal static ChatServerResponse StartTurn(Word word) =>
+            new GameResponse
+            {
+                Type = ResponseType.StartOfTurn,
+                Message = $"The word is `{word.Content}`. Start drawing!"
+            };
+
+        internal static ChatServerResponse StartTurn(Player drawingPlayer) =>
+            new GameResponse
+            {
+                Type = ResponseType.StartOfTurn,
+                Message = $"New turn! {drawingPlayer.Username} is drawing"
+            };
+
+        internal static ChatServerResponse Hit(string guess) =>
+            new GameResponse
+            {
+                Type = ResponseType.Hit,
+                Message = guess
             };
     }
 

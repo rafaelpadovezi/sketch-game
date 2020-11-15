@@ -1,13 +1,8 @@
-﻿using AutoMapper;
-using Microsoft.Extensions.Logging;
-using Sketch.Business;
+﻿using Microsoft.Extensions.Logging;
 using Sketch.DTOs;
 using Sketch.Infrastructure.Connection;
 using Sketch.Infrastructure.Database.Repositories.Interfaces;
-using Sketch.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sketch.Services
@@ -17,23 +12,20 @@ namespace Sketch.Services
         private readonly IPlayerRepository _playerRepository;
         private readonly IGameRoomRepository _gameRoomRepository;
         private readonly IServerConnection _server;
-        private readonly IWordService _wordService;
-        private readonly SketchGame _sketchGame;
+        private readonly IRoundService _roundService;
         private readonly ILogger<GameRoomService> _logger;
 
         public GameRoomService(
             IPlayerRepository playerRepository,
             IGameRoomRepository gameRoomRepository,
             IServerConnection server,
-            IWordService wordService,
-            SketchGame sketchGame,
+            IRoundService roundService,
             ILogger<GameRoomService> logger)
         {
             _playerRepository = playerRepository;
             _gameRoomRepository = gameRoomRepository;
             _server = server;
-            _wordService = wordService;
-            _sketchGame = sketchGame;
+            _roundService = roundService;
             _logger = logger;
         }
 
@@ -44,16 +36,16 @@ namespace Sketch.Services
             player.GameRoomId = gameroom.Id;
             gameroom.Players.Add(player);
 
-            if (gameroom.Players.Count == 2)
-            {
-                var word = await _wordService.GetWord(gameroom.Type);
-                gameroom.Rounds = _sketchGame.InitGame(player, gameroom, word);
-            }
-
             await _gameRoomRepository.SaveChanges();
 
             await _server.Send(ChatServerResponse.EnterGameRoom(gameroom.Name), player);
             await SendGameRoomMessage(ChatMessage.NewPlayer(gameroom.Name, player.Username), player, gameroom);
+
+            if (gameroom.Players.Count == 2)
+            {
+                await _roundService.StartRound(gameroom);
+                await _gameRoomRepository.SaveChanges();
+            }
         }
 
         public async Task LeaveGameRoom(Models.Player player, string newGameRoom)
@@ -70,9 +62,16 @@ namespace Sketch.Services
 
         public async Task SendMessage(string message, Models.Player player)
         {
+            if (!player.GameRoomId.HasValue)
+            {
+                _logger.LogWarning("Player {playerId} has no gameRommId", player.Id);
+                return;
+            }
+
             var gameRoom = await _gameRoomRepository.Get(x => x.Id == player.GameRoomId)
                 ?? throw new Exception($"GameRoom '{player.GameRoomId}' not found");
-            await SendGameRoomMessage(ChatMessage.Public(player.Username, message), player, gameRoom);
+            await _roundService.GuessWord(gameRoom, player, message);
+            await _gameRoomRepository.SaveChanges();
         }
 
         private async Task SendGameRoomMessage(ChatMessage message, Models.Player player, Models.GameRoom gameRoom)

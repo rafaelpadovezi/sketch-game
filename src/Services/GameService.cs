@@ -77,7 +77,8 @@ namespace Sketch.Services
             }
             else
             {
-                await ChangeGameRoom(command, player);
+                await _gameRoomService.EnterGameRoom(command.GameRoomName, player);
+                await _generalRoomService.LeaveToGameRoom(player, command.GameRoomName);
             }
         }
 
@@ -91,12 +92,6 @@ namespace Sketch.Services
             {
                 await _generalRoomService.PlayerSendMessage(playerId, command.Message);
             }
-        }
-
-        private async Task ChangeGameRoom(ChatCommand command, Models.Player player)
-        {
-            await _gameRoomService.EnterGameRoom(command.GameRoomName, player);
-            await _generalRoomService.LeaveToGameRoom(player, command.GameRoomName);
         }
 
         public async Task NewPlayer(Guid playerId)
