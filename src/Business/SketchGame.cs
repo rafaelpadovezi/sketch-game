@@ -32,7 +32,7 @@ namespace Sketch.Business
         public static bool GuessWord(Player player, string guess, Turn turn)
         {
             var playerTurn = player.PlayerTurns.Single(x => x.TurnId == turn.Id);
-            if (guess == turn.Word.Content)
+            if (guess.ToLowerInvariant() == turn.Word.Content.ToLowerInvariant())
             {
                 playerTurn.Points = 10;
             }

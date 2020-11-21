@@ -44,5 +44,71 @@ namespace Tests.Unit
             Assert.False(hit);
             Assert.Null(player.PlayerTurns.First().Points);
         }
+
+        [Fact]
+        public void ShouldGuessCorrectly()
+        {
+            var turn = new Turn
+            {
+                Id = Guid.NewGuid(),
+                Word = new Word
+                {
+                    Content = "Right guess"
+                }
+            };
+            Player player = new Player
+            {
+                Id = Guid.NewGuid(),
+                PlayerTurns = new List<PlayerTurn>
+                {
+                    new PlayerTurn { TurnId = turn.Id },
+                    new PlayerTurn { TurnId = Guid.NewGuid() }
+                }
+            };
+
+            bool hit = SketchGame.GuessWord(player, "right guess", turn);
+
+            Assert.True(hit);
+            Assert.Equal(10, player.PlayerTurns.First().Points);
+        }
+
+        [Fact]
+        public void ShouldCalculateDrawingPointsNoHits()
+        {
+            var drawingPlayer = new PlayerTurn
+            {
+                IsDrawing = true
+            };
+            var points = SketchGame.CalculateDrawingPoints(new List<PlayerTurn>
+            {
+                drawingPlayer,
+                new PlayerTurn
+                {
+                    IsDrawing = false
+                }
+            });
+
+            Assert.Equal(0, points);
+        }
+
+        [Fact]
+        public void ShouldCalculateDrawingPointsWithHits()
+        {
+            var drawingPlayer = new PlayerTurn
+            {
+                IsDrawing = true
+            };
+            var points = SketchGame.CalculateDrawingPoints(new List<PlayerTurn>
+            {
+                drawingPlayer,
+                new PlayerTurn
+                {
+                    IsDrawing = false,
+                    Points = 10
+                }
+            });
+
+            Assert.Equal(10, points);
+        }
     }
 }

@@ -46,7 +46,7 @@ namespace Sketch.Services
             var command = CommandParser.Parse(commandString);
             _logger.LogInformation("Parsed {@command}", command);
             var player = await _playerRepository.GetById(playerId)
-                    ?? throw new Exception("Player not found");
+                ?? throw new Exception("Player not found");
 
             var commandTask = command.Type switch
             {

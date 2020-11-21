@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sketch.Services;
 using System;
@@ -17,12 +18,14 @@ namespace Sketch.Business
     public class GameLifeCycle : IGameLifeCycle
     {
         private readonly IServiceProvider _services;
+        private readonly int _turnDuration;
         private readonly ILogger<GameLifeCycle> _logger;
         private readonly ConcurrentDictionary<Guid, GameTimer> _turnTimers = new ConcurrentDictionary<Guid, GameTimer>();
 
-        public GameLifeCycle(IServiceProvider services, ILogger<GameLifeCycle> logger)
+        public GameLifeCycle(IServiceProvider services, IConfiguration configuration, ILogger<GameLifeCycle> logger)
         {
             _services = services;
+            _turnDuration = configuration.GetValue<int>("TurnDuration");
             _logger = logger;
         }
 
@@ -34,7 +37,7 @@ namespace Sketch.Business
                 {
                     try
                     {
-                        using var scope = _services.CreateScope();
+                        var scope = _services.CreateScope();
                         var game = scope.ServiceProvider
                             .GetRequiredService<IRoundService>();
                         await game.EndTurn(gameroomId);
@@ -43,12 +46,13 @@ namespace Sketch.Business
                     {
                         _logger.LogError(ex, "Error ending turn");
                     }
-                }, 10));
+                }, _turnDuration));
         }
 
         public void Stop(Guid turnId)
         {
-            _turnTimers[turnId]?.Stop();
+            _turnTimers.TryGetValue(turnId, out var timer);
+            timer?.Stop();
         }
     }
 
@@ -63,10 +67,10 @@ namespace Sketch.Business
         /// Execute a task once afiter the due time.
         /// </summary>
         /// <param name="task">Task executed after duetime.</param>
-        /// <param name="dueTime">The amount of time to delay before callback is invoked, in seconds.</param>
+        /// <param name="dueTime">The amount of time to delay before callback is invoked, in milisseconds.</param>
         public GameTimer(Func<Task> task, int dueTime)
         {
-            _timer = new Timer(Heartbeat, null, dueTime * 1000, Timeout.Infinite);
+            _timer = new Timer(Heartbeat, null, dueTime, Timeout.Infinite);
             _task = task;
         }
 

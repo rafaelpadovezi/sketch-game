@@ -54,7 +54,7 @@ namespace Sketch.Services
             else
                 await _serverConnection.Send(ChatMessage.Public(player.Username, guess), gameRoom.Players);
 
-            if (turn.PlayersTurns.All(x => x.Hit))
+            if (turn.PlayersTurns.All(x => x.Hit || x.IsDrawing))
             {
                 _gameLifeCycle.Stop(turn.Id);
                 await EndTurn(gameRoom);

@@ -173,5 +173,46 @@ namespace Tests.Integration.Services
                     x.Send(It.Is<GameResponse>(r => r.Message.Contains($"is drawing"))),
                     Times.Once);
         }
+
+        [Fact]
+        public async Task ShouldEndTurnWhenTimeIsUp()
+        {
+            var mockNewPlayer = _scenario.MockPlayer1InGeneral;
+            var mockExistingPlayer = _scenario.MockPlayerAloneInGameRoom;
+            string gameRoom = _scenario.GameRoomWith1Player.Name;
+
+            var sut = Services.GetRequiredService<IGameService>();
+            _ = await sut.NewCommand(mockNewPlayer.Object.Id, $@"\c {gameRoom}");
+            await Task.Delay(2000); // Wait end turn and hope this works
+
+            mockExistingPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Type == ResponseType.EndOfTurn)),
+                    Times.Once);
+            mockNewPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Type == ResponseType.EndOfTurn)),
+                    Times.Once);
+        }
+
+        [Fact]
+        public async Task ShouldEndTurnWhenPlayerGuessCorrectly()
+        {
+            var drawingPlayer = _scenario.MockPlayer1InGameRoom;
+            var guessingPlayer = _scenario.MockPlayer2InGameRoom;
+            string gameRoom = _scenario.GameRoomWith2Players.Name;
+
+            var sut = Services.GetRequiredService<IGameService>();
+            _ = await sut.NewCommand(guessingPlayer.Object.Id, $@"TestWord");
+
+            guessingPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Type == ResponseType.EndOfTurn)),
+                    Times.Once);
+            drawingPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Type == ResponseType.EndOfTurn)),
+                    Times.Once);
+        }
     }
 }
