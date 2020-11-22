@@ -121,6 +121,8 @@ namespace Sketch.Business
         // https://github.com/davidfowl/AspNetCoreDiagnosticScenarios/blob/master/AsyncGuidance.md#timer-callbacks
         private void Heartbeat(object? state)
         {
+            if (_task == null)
+                return;
             _ = _task().ContinueWith((_) => Done = true);
         }
 

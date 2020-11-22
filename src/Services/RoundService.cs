@@ -82,6 +82,8 @@ namespace Sketch.Services
                 drawingPlayerTurn.Points = SketchGame.CalculateDrawingPoints(turn.PlayersTurns);
             }
 
+            await _gameRoomRepository.SaveChanges();
+
             await _serverConnection.Send(GameResponse.EndOfTurn(turn), gameRoom.Players);
         }
 

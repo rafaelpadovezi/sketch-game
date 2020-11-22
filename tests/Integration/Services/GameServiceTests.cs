@@ -216,17 +216,20 @@ namespace Tests.Integration.Services
         [Fact]
         public async Task ShouldStartTurnAfterLastTurn()
         {
+            var gameCycle = (GameLifeCycle)_scope.ServiceProvider.GetService<IGameLifeCycle>();
+            gameCycle.AutoCreateNewTurn = false;
             var enteringPlayer = _scenario.MockPlayer1InGeneral;
             var existingPlayer = _scenario.MockPlayerAloneInGameRoom;
             string gameRoom = _scenario.GameRoomWith1Player.Name;
 
             _ = await _sut.NewCommand(enteringPlayer.Object.Id, $@"\c {gameRoom}");
             _ = await _sut.NewCommand(enteringPlayer.Object.Id, $@"TestWord");
-            var gameCycle = (GameLifeCycle)_scope.ServiceProvider.GetService<IGameLifeCycle>();
+
             await gameCycle.CheckEndedTurns();
 
             var gameroom = DbContext.GameRooms.Single(x => x.Name == gameRoom);
             Assert.Equal(2, gameroom.Rounds.Single().Turns.Count);
+            Assert.NotNull(gameroom.Rounds.Single().Turns.ElementAt(0).EndTimestamp);
             enteringPlayer
                 .Verify(x =>
                     x.Send(It.Is<GameResponse>(r => r.Message.Contains("Start drawing!"))),
