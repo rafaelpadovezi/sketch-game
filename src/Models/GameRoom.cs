@@ -24,9 +24,8 @@ namespace Sketch.Models
 
     public class Turn : BaseEntity
     {
-        public Guid RoundId { get; set; }
         public Guid DrawingPlayerId { get; set; }
-        public Guid WordId { get; set; }
+        public virtual Player DrawingPlayer { get; set; } = new Player();
         public DateTime StartTimestamp { get; set; } = DateTime.Now;
         public DateTime? EndTimestamp { get; set; }
         public virtual Word Word { get; set; } = new Word();

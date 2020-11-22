@@ -31,14 +31,16 @@ namespace Sketch.Services
         public async Task StartRound(GameRoom gameRoom)
         {
             Word word = await _wordService.PickWord(gameRoom.Type);
-            var drawingPlayer = gameRoom.Players.First();
-            var (round, turn) = SketchGame.NewRound(word, drawingPlayer, gameRoom.Players);
+            var (round, turn) = SketchGame.NewRound(word, gameRoom.Players);
             gameRoom.Rounds.Add(round);
+            var drawingPlayer = turn.DrawingPlayer;
 
             await _serverConnection.Send(GameResponse.StartTurn(word), drawingPlayer);
             await _serverConnection.Send(
                 GameResponse.StartTurn(drawingPlayer),
                 gameRoom.Players.Where(x => x.Id != drawingPlayer.Id));
+
+            await _gameRoomRepository.SaveChanges();
 
             _gameLifeCycle.StartTurn(gameRoom.Id, turn.Id);
         }
@@ -81,6 +83,30 @@ namespace Sketch.Services
             }
 
             await _serverConnection.Send(GameResponse.EndOfTurn(turn), gameRoom.Players);
+        }
+
+        public async Task NextTurn(Guid lastTurnId)
+        {
+            var (gameRoom, round, lastTurn) =
+                await _gameRoomRepository.GetRoomRoundAndTurn(lastTurnId);
+
+            var isRoundComplete = round.IsComplete(gameRoom.Players);
+            // TODO if isRoundComplete
+
+            Word word = await _wordService.PickWord(gameRoom.Type);
+            var turn = SketchGame.NextTurn(round, word, gameRoom.Players);
+            round.Turns.Add(turn);
+
+            var drawingPlayer = turn.DrawingPlayer;
+
+            await _serverConnection.Send(GameResponse.StartTurn(word), drawingPlayer);
+            await _serverConnection.Send(
+                GameResponse.StartTurn(drawingPlayer),
+                gameRoom.Players.Where(x => x.Id != drawingPlayer.Id));
+
+            await _gameRoomRepository.SaveChanges();
+
+            _gameLifeCycle.StartTurn(gameRoom.Id, turn.Id);
         }
     }
 }

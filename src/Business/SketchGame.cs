@@ -8,23 +8,13 @@ namespace Sketch.Business
 {
     public class SketchGame
     {
-
         public static (Round round, Turn turn) NewRound(
             Word word,
-            Player drawingPlayer,
             IEnumerable<Player> players)
         {
+            var drawingPlayer = players.First();
+            var turn = StartTurn(word, drawingPlayer, players);
             var round = new Round();
-            var turn = new Turn
-            {
-                DrawingPlayerId = drawingPlayer.Id,
-                PlayersTurns = players.Select(x => new PlayerTurn
-                {
-                    PlayerId = x.Id,
-                    IsDrawing = x.Id == drawingPlayer.Id
-                }).ToList(),
-                Word = word
-            };
             round.Turns.Add(turn);
             return (round, turn);
         }
@@ -52,6 +42,34 @@ namespace Sketch.Business
             bool gotHits = playerTurns.Where(x => !x.IsDrawing).Any(x => x.Hit);
 
             return gotHits ? 10 : 0;
+        }
+
+        public static Turn NextTurn(
+            Round round,
+            Word word,
+            IEnumerable<Player> players)
+        {
+            var playersWhoDraw = round.Turns.Select(x => x.DrawingPlayerId);
+            var drawingPlayer = players.First(x => !playersWhoDraw.Contains(x.Id));
+            round.Count++;
+            return StartTurn(word, drawingPlayer, players);
+        }
+
+        private static Turn StartTurn(Word word,
+            Player drawingPlayer,
+            IEnumerable<Player> players)
+        {
+            return new Turn
+            {
+                DrawingPlayerId = drawingPlayer.Id,
+                DrawingPlayer = drawingPlayer,
+                PlayersTurns = players.Select(x => new PlayerTurn
+                {
+                    PlayerId = x.Id,
+                    IsDrawing = x.Id == drawingPlayer.Id
+                }).ToList(),
+                Word = word
+            };
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Sketch.Models
 {
@@ -9,6 +10,14 @@ namespace Sketch.Models
             return gameRoom
                 .Rounds.Single(x => !x.EndTimestamp.HasValue)
                 .Turns.Single(x => !x.EndTimestamp.HasValue);
+        }
+
+        public static bool IsComplete(this Round round, IEnumerable<Player> players)
+        {
+            if (round.Turns.Any(x => !x.EndTimestamp.HasValue))
+                return false;
+            var playersWhoDraw = round.Turns.Select(x => x.DrawingPlayerId);
+            return players.All(x => playersWhoDraw.Contains(x.Id));
         }
     }
 }

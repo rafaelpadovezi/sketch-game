@@ -16,13 +16,39 @@ namespace Tests.Unit
             var player2 = new Player { Id = Guid.NewGuid() };
 
             var (round, turn) = SketchGame.NewRound(
-                new Word { Content = "Test" }, player1, new Player[] { player1, player2 });
+                new Word { Content = "Test" },
+                new Player[] { player1, player2 });
 
             Assert.Equal(1, round.Count);
             var existingPlayerTurn = turn.PlayersTurns.ElementAt(0);
             var newPlayerTurn = turn.PlayersTurns.ElementAt(1);
             Assert.True(existingPlayerTurn.IsDrawing);
             Assert.False(newPlayerTurn.IsDrawing);
+        }
+
+        [Fact]
+        public void ShouldStartNextTurn()
+        {
+            var player1 = new Player { Id = Guid.NewGuid() };
+            var player2 = new Player { Id = Guid.NewGuid() };
+            var round = new Round
+            {
+                Turns = new List<Turn>
+                {
+                    new Turn { DrawingPlayerId = player1.Id }
+                }
+            };
+
+            var turn = SketchGame.NextTurn(
+                round,
+                new Word { Content = "Test" },
+                new Player[] { player1, player2 });
+
+            Assert.Equal(2, round.Count);
+            var player1Turn = turn.PlayersTurns.ElementAt(0);
+            var player2Turn = turn.PlayersTurns.ElementAt(1);
+            Assert.False(player1Turn.IsDrawing);
+            Assert.True(player2Turn.IsDrawing);
         }
 
         [Fact]

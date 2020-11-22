@@ -44,7 +44,6 @@ namespace Sketch.Services
             if (gameroom.Players.Count == 2)
             {
                 await _roundService.StartRound(gameroom);
-                await _gameRoomRepository.SaveChanges();
             }
         }
 
