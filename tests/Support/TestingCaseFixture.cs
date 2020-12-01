@@ -25,6 +25,7 @@ namespace Tests.Support
         protected TestingCaseFixture()
         {
             var builder = WebHost.CreateDefaultBuilder()
+                .UseEnvironment("Testing")
                 .UseStartup<TStartup>();
 
             // constructs the testing server with the WebHostBuilder configuration

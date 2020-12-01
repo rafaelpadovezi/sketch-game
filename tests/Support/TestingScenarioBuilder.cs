@@ -54,6 +54,7 @@ namespace Tests.Support
                         {
                             new Turn
                             {
+                                Word = new Word { Content = "TestWord" },
                                 PlayersTurns = new List<PlayerTurn>
                                 {
                                     new PlayerTurn

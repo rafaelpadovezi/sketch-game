@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using Sketch.Business;
 using Sketch.DTOs;
 using Sketch.Services;
 using System;
@@ -13,15 +14,20 @@ namespace Tests.Integration.Services
     public class GameServiceTests : TestingCaseFixture<TestingStartUp>, IDisposable
     {
         private readonly TestingScenarioBuilder _scenario;
+        private readonly IServiceScope _scope;
+        private readonly IGameService _sut;
 
         public GameServiceTests()
         {
             _scenario = new TestingScenarioBuilder(DbContext, Server);
+            _scope = Services.CreateScope();
+            _sut = _scope.ServiceProvider.GetRequiredService<IGameService>();
         }
 
         void IDisposable.Dispose()
         {
             Server.Clear();
+            _scope.Dispose();
         }
 
         [Fact]
@@ -29,8 +35,7 @@ namespace Tests.Integration.Services
         {
             var mockNewPlayer = _scenario.MockPlayer1InGeneral;
 
-            var sut = Services.GetRequiredService<IGameService>();
-            await sut.NewPlayer(mockNewPlayer.Object.Id);
+            await _sut.NewPlayer(mockNewPlayer.Object.Id);
 
             mockNewPlayer.Verify(
                 x => x.Send(It.Is<ChatMessage>(m => m.Message.Contains("has joined #general"))), Times.Once);
@@ -43,8 +48,7 @@ namespace Tests.Integration.Services
         {
             var mockPlayerLeaving = _scenario.MockPlayer1InGeneral;
 
-            var sut = Services.GetRequiredService<IGameService>();
-            await sut.PlayerLeaves(mockPlayerLeaving.Object.Id);
+            await _sut.PlayerLeaves(mockPlayerLeaving.Object.Id);
 
             mockPlayerLeaving.Verify(
                 x => x.Send(It.Is<ChatMessage>(m => m.Message.Contains("has left #general"))), Times.Once);
@@ -57,8 +61,7 @@ namespace Tests.Integration.Services
         {
             var mockPlayerSendsMessage = _scenario.MockPlayer1InGeneral;
 
-            var sut = Services.GetRequiredService<IGameService>();
-            _ = await sut.NewCommand(mockPlayerSendsMessage.Object.Id, "hi!");
+            _ = await _sut.NewCommand(mockPlayerSendsMessage.Object.Id, "hi!");
 
             mockPlayerSendsMessage.Verify(
                 x => x.Send(It.Is<ChatMessage>(m => m.Message.Contains("hi!"))), Times.Once);
@@ -71,8 +74,7 @@ namespace Tests.Integration.Services
         {
             var mockPlayerSendsExitCommand = _scenario.MockPlayer1InGeneral;
 
-            var sut = Services.GetRequiredService<IGameService>();
-            bool exitCommand = await sut.NewCommand(mockPlayerSendsExitCommand.Object.Id, @"\exit");
+            bool exitCommand = await _sut.NewCommand(mockPlayerSendsExitCommand.Object.Id, @"\exit");
 
             Assert.True(exitCommand);
             mockPlayerSendsExitCommand.Verify(
@@ -86,8 +88,7 @@ namespace Tests.Integration.Services
         {
             var mockPlayerSendsListCommand = _scenario.MockPlayer1InGeneral;
 
-            var sut = Services.GetRequiredService<IGameService>();
-            _ = await sut.NewCommand(mockPlayerSendsListCommand.Object.Id, @"\list");
+            _ = await _sut.NewCommand(mockPlayerSendsListCommand.Object.Id, @"\list");
 
             mockPlayerSendsListCommand.Verify(
                 x => x.Send(It.Is<ChatServerResponse>(x => x.Type == ResponseType.ListGameRooms)), Times.Once);
@@ -99,8 +100,7 @@ namespace Tests.Integration.Services
             var mockPlayerEnterGameRoom = _scenario.MockPlayer1InGeneral;
             var gameRoom = _scenario.GameRoomWith2Players;
 
-            var sut = Services.GetRequiredService<IGameService>();
-            _ = await sut.NewCommand(mockPlayerEnterGameRoom.Object.Id, $@"\c {gameRoom.Name}");
+            _ = await _sut.NewCommand(mockPlayerEnterGameRoom.Object.Id, $@"\c {gameRoom.Name}");
 
             var gameroom = DbContext.GameRooms.Single(x => x.Name == gameRoom.Name);
             Assert.Contains(mockPlayerEnterGameRoom.Object.Id, gameroom.Players.Select(x => x.Id));
@@ -120,8 +120,7 @@ namespace Tests.Integration.Services
             var mockPlayerSendMessage = _scenario.MockPlayer1InGameRoom;
             var gameRoom = _scenario.GameRoomWith2Players;
 
-            var sut = Services.GetRequiredService<IGameService>();
-            _ = await sut.NewCommand(mockPlayerSendMessage.Object.Id, "hey all");
+            _ = await _sut.NewCommand(mockPlayerSendMessage.Object.Id, "hey all");
 
             mockPlayerSendMessage.Verify(
                 x => x.Send(It.Is<ChatMessage>(m => m.Message.Contains("hey all"))), Times.Once);
@@ -137,8 +136,7 @@ namespace Tests.Integration.Services
             var mockPlayerLeaveGameRoom = _scenario.MockPlayer1InGameRoom;
             var gameRoom = _scenario.GameRoomWith2Players;
 
-            var sut = Services.GetRequiredService<IGameService>();
-            _ = await sut.NewCommand(mockPlayerLeaveGameRoom.Object.Id, @"\c general");
+            _ = await _sut.NewCommand(mockPlayerLeaveGameRoom.Object.Id, @"\c general");
 
             var gameroom = DbContext.GameRooms.Single(x => x.Name == gameRoom.Name);
             Assert.DoesNotContain(mockPlayerLeaveGameRoom.Object.Id, gameroom.Players.Select(x => x.Id));
@@ -156,20 +154,90 @@ namespace Tests.Integration.Services
         public async Task ShouldStartTurnWhenPlayerEnterGameRoomWith1Player()
         {
             var mockNewPlayer = _scenario.MockPlayer1InGeneral;
+            var mockExistingPlayer = _scenario.MockPlayerAloneInGameRoom;
             string gameRoom = _scenario.GameRoomWith1Player.Name;
-            var existingPlayerId = _scenario.GameRoomWith1Player.Players.Single().Id;
 
-            var sut = Services.GetRequiredService<IGameService>();
-            _ = await sut.NewCommand(mockNewPlayer.Object.Id, $@"\c {gameRoom}");
+            _ = await _sut.NewCommand(mockNewPlayer.Object.Id, $@"\c {gameRoom}");
 
             var gameroom = DbContext.GameRooms.Single(x => x.Name == gameRoom);
-            var turn = gameroom.Rounds.Single().Turns.Single();
-            var existingPlayerTurn = turn.PlayersTurns.ElementAt(0);
-            var newPlayerTurn = turn.PlayersTurns.ElementAt(1);
-            Assert.True(existingPlayerTurn.IsDrawing);
-            Assert.Equal(existingPlayerId, existingPlayerTurn.PlayerId);
-            Assert.False(newPlayerTurn.IsDrawing);
-            Assert.Equal(mockNewPlayer.Object.Id, newPlayerTurn.PlayerId);
+            Assert.Single(gameroom.Rounds);
+            mockExistingPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Message.Contains("Start drawing!"))),
+                    Times.Once);
+            mockNewPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Message.Contains($"is drawing"))),
+                    Times.Once);
+        }
+
+        [Fact]
+        public async Task ShouldEndTurnWhenTimeIsUp()
+        {
+            var mockNewPlayer = _scenario.MockPlayer1InGeneral;
+            var mockExistingPlayer = _scenario.MockPlayerAloneInGameRoom;
+            string gameRoom = _scenario.GameRoomWith1Player.Name;
+            var gameCycle = (GameLifeCycle)_scope.ServiceProvider.GetService<IGameLifeCycle>();
+            gameCycle.TurnDuration = 10;
+            gameCycle.AutoCreateNewTurn = false;
+
+            _ = await _sut.NewCommand(mockNewPlayer.Object.Id, $@"\c {gameRoom}");
+            await Task.Delay(2000); // Wait end turn and hope this works
+
+            mockExistingPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Type == ResponseType.EndOfTurn)),
+                    Times.Once);
+            mockNewPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Type == ResponseType.EndOfTurn)),
+                    Times.Once);
+        }
+
+        [Fact]
+        public async Task ShouldEndTurnWhenPlayerGuessCorrectly()
+        {
+            var drawingPlayer = _scenario.MockPlayer1InGameRoom;
+            var guessingPlayer = _scenario.MockPlayer2InGameRoom;
+            string gameRoom = _scenario.GameRoomWith2Players.Name;
+
+            _ = await _sut.NewCommand(guessingPlayer.Object.Id, $@"TestWord");
+
+            guessingPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Type == ResponseType.EndOfTurn)),
+                    Times.Once);
+            drawingPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Type == ResponseType.EndOfTurn)),
+                    Times.Once);
+        }
+
+        [Fact]
+        public async Task ShouldStartTurnAfterLastTurn()
+        {
+            var gameCycle = (GameLifeCycle)_scope.ServiceProvider.GetService<IGameLifeCycle>();
+            gameCycle.AutoCreateNewTurn = false;
+            var enteringPlayer = _scenario.MockPlayer1InGeneral;
+            var existingPlayer = _scenario.MockPlayerAloneInGameRoom;
+            string gameRoom = _scenario.GameRoomWith1Player.Name;
+
+            _ = await _sut.NewCommand(enteringPlayer.Object.Id, $@"\c {gameRoom}");
+            _ = await _sut.NewCommand(enteringPlayer.Object.Id, $@"TestWord");
+
+            await gameCycle.CheckEndedTurns();
+
+            var gameroom = DbContext.GameRooms.Single(x => x.Name == gameRoom);
+            Assert.Equal(2, gameroom.Rounds.Single().Turns.Count);
+            Assert.NotNull(gameroom.Rounds.Single().Turns.ElementAt(0).EndTimestamp);
+            enteringPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Message.Contains("Start drawing!"))),
+                    Times.Once);
+            existingPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Message.Contains($"is drawing"))),
+                    Times.Once);
         }
     }
 }

@@ -22,7 +22,8 @@ namespace Sketch.Infrastructure.IoC
                 .AddScoped<IGameRoomService, GameRoomService>()
                 .AddScoped<IGameService, GameService>()
                 .AddScoped<IWordService, WordService>()
-                .AddScoped<SketchGame>()
+                .AddScoped<IRoundService, RoundService>()
+                .AddSingleton<IGameLifeCycle, GameLifeCycle>()
                 .AddSingleton<IServerConnection, ServerConnection>();
         }
     }

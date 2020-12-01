@@ -46,7 +46,7 @@ namespace Sketch.Services
             var command = CommandParser.Parse(commandString);
             _logger.LogInformation("Parsed {@command}", command);
             var player = await _playerRepository.GetById(playerId)
-                    ?? throw new Exception("Player not found");
+                ?? throw new Exception("Player not found");
 
             var commandTask = command.Type switch
             {
@@ -77,7 +77,8 @@ namespace Sketch.Services
             }
             else
             {
-                await ChangeGameRoom(command, player);
+                await _gameRoomService.EnterGameRoom(command.GameRoomName, player);
+                await _generalRoomService.LeaveToGameRoom(player, command.GameRoomName);
             }
         }
 
@@ -91,12 +92,6 @@ namespace Sketch.Services
             {
                 await _generalRoomService.PlayerSendMessage(playerId, command.Message);
             }
-        }
-
-        private async Task ChangeGameRoom(ChatCommand command, Models.Player player)
-        {
-            await _gameRoomService.EnterGameRoom(command.GameRoomName, player);
-            await _generalRoomService.LeaveToGameRoom(player, command.GameRoomName);
         }
 
         public async Task NewPlayer(Guid playerId)
