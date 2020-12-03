@@ -57,6 +57,11 @@ namespace Sketch.Services
                 ?? throw new Exception($"GameRoom '{player.GameRoomId}' not found");
             await SendGameRoomMessage(ChatMessage.ChangeRoom(player.Username, newGameRoom), player, gameRoom);
             await _server.Send(ChatServerResponse.EnterGameRoom(newGameRoom), player);
+            gameRoom.Players.Remove(player);
+            if (gameRoom.Players.Count == 1)
+            {
+                await _roundService.EndTurn(gameRoom);
+            }
         }
 
         public async Task SendMessage(string message, Models.Player player)

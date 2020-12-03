@@ -15,7 +15,8 @@ namespace Sketch.DTOs
         EnterGameRoom,
         EndOfTurn,
         Hit,
-        StartOfTurn
+        StartOfTurn,
+        EndOfRound
     }
 
     public class ChatServerResponse
@@ -64,31 +65,51 @@ namespace Sketch.DTOs
                     new RankingViewModel
                     {
                         Results = turn.PlayersTurns
-                            .OrderBy(x => x.Points)
+                            .OrderByDescending(x => x.Points)
                             .ToDictionary(x => x.Player.Username, x => x.Points ?? 0)
                     }
                 }
             };
 
-        internal static ChatServerResponse StartTurn(Word word) =>
+        internal static ChatServerResponse StartTurn(Word word, int duration) =>
             new GameResponse
             {
                 Type = ResponseType.StartOfTurn,
-                Message = $"The word is `{word.Content}`. Start drawing!"
+                Message = $"The word is `{word.Content}`. Start drawing!",
+                Details = new object[] { duration }
             };
 
-        internal static ChatServerResponse StartTurn(Player drawingPlayer) =>
+        internal static ChatServerResponse StartTurn(Player drawingPlayer, int duration) =>
             new GameResponse
             {
                 Type = ResponseType.StartOfTurn,
-                Message = $"New turn! {drawingPlayer.Username} is drawing"
+                Message = $"New turn! {drawingPlayer.Username} is drawing",
+                Details = new object[] { duration }
             };
 
         internal static ChatServerResponse Hit(string guess) =>
             new GameResponse
             {
                 Type = ResponseType.Hit,
-                Message = guess
+                Message = $"nice! response is `{guess}`"
+            };
+
+        public static ChatServerResponse EndOfRound(Round round) =>
+            new GameResponse
+            {
+                Type = ResponseType.EndOfRound,
+                Details = new RankingViewModel[]
+                {
+                    new RankingViewModel
+                    {
+                        Results = round.Turns
+                            .Select(turn => turn
+                                .PlayersTurns
+                                .ToDictionary(x => x.Player.Username, x => x.Points ?? 0))
+                            .Aggregate((results, turnResults) =>
+                                turnResults.ToDictionary(x => x.Key, x => x.Value + results[x.Key]))
+                    }
+                }
             };
     }
 

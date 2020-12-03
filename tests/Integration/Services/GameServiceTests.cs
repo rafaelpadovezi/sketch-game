@@ -223,9 +223,13 @@ namespace Tests.Integration.Services
             string gameRoom = _scenario.GameRoomWith1Player.Name;
 
             _ = await _sut.NewCommand(enteringPlayer.Object.Id, $@"\c {gameRoom}");
+            var turnId = DbContext
+                .GameRooms.Single(x => x.Name == gameRoom)
+                    .Rounds.Single()
+                        .Turns.Single().Id;
             _ = await _sut.NewCommand(enteringPlayer.Object.Id, $@"TestWord");
 
-            await gameCycle.CheckEndedTurns();
+            await gameCycle.NextTurn(turnId);
 
             var gameroom = DbContext.GameRooms.Single(x => x.Name == gameRoom);
             Assert.Equal(2, gameroom.Rounds.Single().Turns.Count);
@@ -238,6 +242,91 @@ namespace Tests.Integration.Services
                 .Verify(x =>
                     x.Send(It.Is<GameResponse>(r => r.Message.Contains($"is drawing"))),
                     Times.Once);
+        }
+
+        [Fact]
+        public async Task ShouldEndRoundWhenAllPlayersHaveDrawn()
+        {
+            var gameCycle = (GameLifeCycle)_scope.ServiceProvider.GetService<IGameLifeCycle>();
+            gameCycle.AutoCreateNewTurn = false;
+            gameCycle.TurnDuration = 1_000_000;
+            var enteringPlayer = _scenario.MockPlayer1InGeneral;
+            var existingPlayer = _scenario.MockPlayerAloneInGameRoom;
+            string gameRoom = _scenario.GameRoomWith1Player.Name;
+
+            _ = await _sut.NewCommand(enteringPlayer.Object.Id, $@"\c {gameRoom}");
+            _ = await _sut.NewCommand(enteringPlayer.Object.Id, $@"TestWord");
+            var turnId = DbContext
+                .GameRooms.Single(x => x.Name == gameRoom)
+                    .Rounds.Single()
+                        .Turns.Single().Id;
+            await gameCycle.NextTurn(turnId);
+            _ = await _sut.NewCommand(existingPlayer.Object.Id, $@"TestWord");
+
+            enteringPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Type == ResponseType.EndOfRound)),
+                    Times.Once);
+            existingPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Type == ResponseType.EndOfRound)),
+                    Times.Once);
+        }
+
+        [Fact]
+        public async Task ShouldStartNewRound()
+        {
+            var gameCycle = (GameLifeCycle)_scope.ServiceProvider.GetService<IGameLifeCycle>();
+            gameCycle.AutoCreateNewTurn = false;
+            gameCycle.TurnDuration = 1_000_000;
+            var enteringPlayer = _scenario.MockPlayer1InGeneral;
+            var existingPlayer = _scenario.MockPlayerAloneInGameRoom;
+            string gameRoom = _scenario.GameRoomWith1Player.Name;
+
+            _ = await _sut.NewCommand(enteringPlayer.Object.Id, $@"\c {gameRoom}");
+            _ = await _sut.NewCommand(enteringPlayer.Object.Id, $@"TestWord");
+            var turnId = DbContext
+                .GameRooms.Single(x => x.Name == gameRoom)
+                    .Rounds.Single()
+                        .Turns.Single().Id;
+            await gameCycle.NextTurn(turnId);
+            _ = await _sut.NewCommand(existingPlayer.Object.Id, $@"TestWord");
+            await gameCycle.NextTurn(turnId);
+
+            var rounds = DbContext
+                .GameRooms.Single(x => x.Name == gameRoom).Rounds;
+            Assert.Equal(2, rounds.Count);
+            Assert.Single(rounds.Last().Turns);
+
+            existingPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Message.Contains("Start drawing!"))),
+                    Times.Exactly(2));
+            enteringPlayer
+                .Verify(x =>
+                    x.Send(It.Is<GameResponse>(r => r.Message.Contains($"is drawing"))),
+                    Times.Exactly(2));
+        }
+
+        [Fact]
+        public async Task ShouldEndGameIfGameRoomHasOnePlayer()
+        {
+            var gameCycle = (GameLifeCycle)_scope.ServiceProvider.GetService<IGameLifeCycle>();
+            gameCycle.AutoCreateNewTurn = false;
+            gameCycle.TurnDuration = 1_000_000;
+            var enteringPlayer = _scenario.MockPlayer1InGeneral;
+            var existingPlayer = _scenario.MockPlayerAloneInGameRoom;
+            string gameRoom = _scenario.GameRoomWith1Player.Name;
+
+            _ = await _sut.NewCommand(enteringPlayer.Object.Id, $@"\c {gameRoom}");
+            _ = await _sut.NewCommand(enteringPlayer.Object.Id, @"\c general");
+
+            var rounds = DbContext
+                .GameRooms.Single(x => x.Name == gameRoom).Rounds;
+            var turn = rounds.Last().Turns.Last();
+            Assert.Single(rounds);
+            Assert.Single(rounds.Last().Turns);
+            Assert.NotNull(turn.EndTimestamp);
         }
     }
 }

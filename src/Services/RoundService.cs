@@ -35,14 +35,22 @@ namespace Sketch.Services
             gameRoom.Rounds.Add(round);
             var drawingPlayer = turn.DrawingPlayer;
 
-            await _serverConnection.Send(GameResponse.StartTurn(word), drawingPlayer);
-            await _serverConnection.Send(
-                GameResponse.StartTurn(drawingPlayer),
-                gameRoom.Players.Where(x => x.Id != drawingPlayer.Id));
+            await SendStartTurnMessages(gameRoom, word, drawingPlayer);
 
             await _gameRoomRepository.SaveChanges();
 
             _gameLifeCycle.StartTurn(gameRoom.Id, turn.Id);
+        }
+
+        private async Task SendStartTurnMessages(GameRoom gameRoom, Word word, Player drawingPlayer)
+        {
+            await Task.WhenAll(
+                _serverConnection.Send(
+                    GameResponse.StartTurn(word, _gameLifeCycle.TurnDuration),
+                    drawingPlayer),
+                _serverConnection.Send(
+                    GameResponse.StartTurn(drawingPlayer, _gameLifeCycle.TurnDuration),
+                    gameRoom.Players.Where(x => x.Id != drawingPlayer.Id)));
         }
 
         public async Task GuessWord(GameRoom gameRoom, Player player, string guess)
@@ -58,11 +66,10 @@ namespace Sketch.Services
 
             if (turn.PlayersTurns.All(x => x.Hit || x.IsDrawing))
             {
-                _gameLifeCycle.Stop(turn.Id);
                 await EndTurn(gameRoom);
+                _gameLifeCycle.ScheduleNextTurn(turn.Id);
             }
         }
-
 
         public async Task EndTurn(Guid gameRoomId)
         {
@@ -74,6 +81,7 @@ namespace Sketch.Services
         public async Task EndTurn(GameRoom gameRoom)
         {
             var turn = gameRoom.CurrentTurn();
+            _gameLifeCycle.Stop(turn.Id);
             turn.EndTimestamp = DateTime.Now;
             var drawingPlayer = gameRoom.Players.SingleOrDefault(x => x.Id == turn.DrawingPlayerId);
             if (drawingPlayer != null)
@@ -82,18 +90,29 @@ namespace Sketch.Services
                 drawingPlayerTurn.Points = SketchGame.CalculateDrawingPoints(turn.PlayersTurns);
             }
 
-            await _gameRoomRepository.SaveChanges();
-
             await _serverConnection.Send(GameResponse.EndOfTurn(turn), gameRoom.Players);
+
+            var round = gameRoom.CurrentRound();
+            if (round.IsComplete(gameRoom.Players))
+            {
+                round.EndTimestamp = DateTime.Now;
+                await _serverConnection.Send(
+                    GameResponse.EndOfRound(round), gameRoom.Players);
+            }
+
+            await _gameRoomRepository.SaveChanges();
         }
 
         public async Task NextTurn(Guid lastTurnId)
         {
-            var (gameRoom, round, lastTurn) =
+            var (gameRoom, round, _) =
                 await _gameRoomRepository.GetRoomRoundAndTurn(lastTurnId);
 
-            var isRoundComplete = round.IsComplete(gameRoom.Players);
-            // TODO if isRoundComplete
+            if (round.IsComplete(gameRoom.Players))
+            {
+                await StartRound(gameRoom);
+                return;
+            }
 
             Word word = await _wordService.PickWord(gameRoom.Type);
             var turn = SketchGame.NextTurn(round, word, gameRoom.Players);
@@ -101,10 +120,7 @@ namespace Sketch.Services
 
             var drawingPlayer = turn.DrawingPlayer;
 
-            await _serverConnection.Send(GameResponse.StartTurn(word), drawingPlayer);
-            await _serverConnection.Send(
-                GameResponse.StartTurn(drawingPlayer),
-                gameRoom.Players.Where(x => x.Id != drawingPlayer.Id));
+            await SendStartTurnMessages(gameRoom, word, drawingPlayer);
 
             await _gameRoomRepository.SaveChanges();
 

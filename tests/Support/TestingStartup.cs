@@ -12,7 +12,7 @@ namespace Tests.Support
 {
     public class TestingStartUp
     {
-        private static object _lockObject = new object();
+        private static readonly object _lockObject = new object();
         public TestingStartUp(IConfiguration configuration)
         {
             Configuration = configuration;
