@@ -4,9 +4,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Moq;
 using Sketch.Infrastructure.Connection;
+using Sketch.Models;
+using Sketch.Services;
 using System;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace Tests.Support
 {
@@ -26,7 +31,15 @@ namespace Tests.Support
         {
             var builder = WebHost.CreateDefaultBuilder()
                 .UseEnvironment("Testing")
-                .UseStartup<TStartup>();
+                .UseStartup<TStartup>()
+                .ConfigureTestServices(services =>
+                {
+                    services.Replace(
+                        new ServiceDescriptor(
+                            typeof(IWordService),
+                            typeof(TestWordService),
+                            ServiceLifetime.Scoped));
+                });
 
             // constructs the testing server with the WebHostBuilder configuration
             // Startup class configures injected mocked services, and middleware (ConfigureServices, etc.)
@@ -49,6 +62,14 @@ namespace Tests.Support
 
             _transaction.Rollback();
             _transaction.Dispose();
+        }
+    }
+
+    public class TestWordService : IWordService
+    {
+        public Task<Word> PickWord(GameRoomType type)
+        {
+            return Task.FromResult(new Word { Content = "TestWord" });
         }
     }
 }

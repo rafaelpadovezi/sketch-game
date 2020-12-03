@@ -15,7 +15,7 @@
           </div>
           <div class="column">
             <h2>{{ gameRoom }}</h2>
-            <div>{{ round.timer }}</div>
+            <div>{{ countdown }}</div>
           </div>
         </div>
       </article>
@@ -73,9 +73,6 @@ export default {
   components: { Canvas },
   data() {
     return {
-      round: {
-        timer: 100
-      },
       textInput: ""
     };
   },
@@ -83,7 +80,8 @@ export default {
     ...mapGetters("chat", {
       messages: "messages",
       gameRoom: "gameRoom",
-      isConnected: "isConnected"
+      isConnected: "isConnected",
+      countdown: "countdown"
     })
   },
   mounted() {

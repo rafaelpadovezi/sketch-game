@@ -34,5 +34,14 @@ namespace Sketch.Infrastructure.Database.Repositories
 
             return (gameRoom, round, turn);
         }
+
+        public async Task<GameRoom> GetRoomByTurnId(Guid turnId)
+        {
+            return await Context.GameRooms.SingleOrDefaultAsync(
+                gameRoom => gameRoom.Rounds.Any(
+                    round => round.Turns.Any(
+                        turn => turn.Id == turnId)))
+                ?? throw new Exception($"Game room not found for turn id {turnId}");
+        }
     }
 }
