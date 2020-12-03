@@ -2,7 +2,6 @@
 using Sketch.DTOs;
 using Sketch.Infrastructure.Connection;
 using Sketch.Infrastructure.Database.Repositories.Interfaces;
-using Sketch.Models;
 using System;
 using System.Threading.Tasks;
 
