@@ -11,11 +11,11 @@ namespace Sketch.Models
                 .Rounds.Single(x => !x.EndTimestamp.HasValue);
         }
 
-        public static Turn CurrentTurn(this GameRoom gameRoom)
+        public static Turn? CurrentTurn(this GameRoom gameRoom)
         {
             return gameRoom
                 .CurrentRound()
-                .Turns.Single(x => !x.EndTimestamp.HasValue);
+                .Turns.SingleOrDefault(x => !x.EndTimestamp.HasValue);
         }
 
         public static bool IsComplete(this Round round, IEnumerable<Player> players)

@@ -56,6 +56,11 @@ namespace Sketch.Services
         public async Task GuessWord(GameRoom gameRoom, Player player, string guess)
         {
             var turn = gameRoom.CurrentTurn();
+            if (turn is null)
+            {
+                await _serverConnection.Send(ChatMessage.Public(player.Username, guess), gameRoom.Players);
+                return;
+            }
 
             bool hit = SketchGame.GuessWord(player, guess, turn);
 

@@ -214,6 +214,28 @@ namespace Tests.Integration.Services
         }
 
         [Fact]
+        public async Task ShouldSendMessageWhenTurnIsOver()
+        {
+            var drawingPlayer = _scenario.MockPlayer1InGameRoom;
+            var guessingPlayer = _scenario.MockPlayer2InGameRoom;
+            string gameRoom = _scenario.GameRoomWith2Players.Name;
+
+            _ = await _sut.NewCommand(guessingPlayer.Object.Id, $@"TestWord");
+            _ = await _sut.NewCommand(guessingPlayer.Object.Id, $@"TestWord");
+
+            guessingPlayer
+                .Verify(x =>
+                    x.Send(It.Is<ChatMessage>(r =>
+                        r.Message.EndsWith(" says: TestWord"))),
+                    Times.Once);
+            drawingPlayer
+                .Verify(x =>
+                    x.Send(It.Is<ChatMessage>(r =>
+                        r.Message.EndsWith(" says: TestWord"))),
+                    Times.Once);
+        }
+
+        [Fact]
         public async Task ShouldStartTurnAfterLastTurn()
         {
             var gameCycle = (GameLifeCycle)_scope.ServiceProvider.GetService<IGameLifeCycle>();
