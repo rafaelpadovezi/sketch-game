@@ -448,6 +448,25 @@ namespace Tests.Integration.Services
         }
 
         [Fact]
+        public async Task ShouldEndTurnIfPlayerLeaveGameAndHasNoOneToGuess()
+        {
+            var mockNewPlayer1 = _scenario.MockPlayer1InGeneral;
+            var mockNewPlayer2 = _scenario.MockPlayer2InGeneral;
+            var mockExistingPlayer = _scenario.MockPlayerAloneInGameRoom;
+            string gameRoom = _scenario.GameRoomWith1Player.Name;
+
+            _ = await _sut.NewCommand(mockNewPlayer1.Object.Id, $@"\c {gameRoom}");
+            _ = await _sut.NewCommand(mockNewPlayer2.Object.Id, $@"\c {gameRoom}");
+            _ = await _sut.NewCommand(mockNewPlayer2.Object.Id, "TestWord");
+            await _sut.PlayerLeaves(mockNewPlayer1.Object.Id);
+
+            var rounds = DbContext
+                .GameRooms.Single(x => x.Name == gameRoom).Rounds;
+            var turn = rounds.Single().Turns.Single();
+            Assert.True(turn.EndTimestamp.HasValue);
+        }
+
+        [Fact]
         public async Task ShouldEndTurnIfPlayerLeavesAndOtherPlayersGuessCorrectly()
         {
             var mockNewPlayer1 = _scenario.MockPlayer1InGeneral;

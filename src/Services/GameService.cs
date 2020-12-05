@@ -97,6 +97,10 @@ namespace Sketch.Services
 
         public async Task PlayerLeaves(Guid playerId)
         {
+            var player = await _playerRepository.GetById(playerId)
+                ?? throw new Exception("Player not found");
+            if (player.GameRoomId.HasValue)
+                await _gameRoomService.Leave(player);
             await _generalRoomService.PlayerLeaves(playerId);
         }
     }

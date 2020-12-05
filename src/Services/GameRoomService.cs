@@ -56,16 +56,33 @@ namespace Sketch.Services
             }
         }
 
-        public async Task LeaveGameRoom(Models.Player player, string newGameRoom)
+        public async Task LeaveGameRoom(Player player, string newGameRoom)
         {
             var gameRoomId = player.GameRoomId.HasValue
                 ? player.GameRoomId.Value
                 : throw new Exception("Player ins't in a room");
-
             var gameRoom = (await _gameRoomRepository.GetById(gameRoomId))
                 ?? throw new Exception($"GameRoom '{player.GameRoomId}' not found");
+
             await SendGameRoomMessage(ChatMessage.ChangeRoom(player.Username, newGameRoom), player, gameRoom);
             await _server.Send(ChatServerResponse.EnterGameRoom(newGameRoom), player);
+            await RemovePlayer(gameRoom, player);
+        }
+
+        public async Task Leave(Player player)
+        {
+            var gameRoomId = player.GameRoomId.HasValue
+                ? player.GameRoomId.Value
+                : throw new Exception("Player ins't in a room");
+            var gameRoom = (await _gameRoomRepository.GetById(gameRoomId))
+                ?? throw new Exception($"GameRoom '{player.GameRoomId}' not found");
+
+            await SendGameRoomMessage(ChatMessage.LeftGame(player.Username), player, gameRoom);
+            await RemovePlayer(gameRoom, player);
+        }
+
+        private async Task RemovePlayer(GameRoom gameRoom, Player player)
+        {
             gameRoom.Players.Remove(player);
             if (gameRoom.Players.Count == 1)
                 await _roundService.EndTurn(gameRoom);
@@ -74,7 +91,7 @@ namespace Sketch.Services
             await _gameRoomRepository.SaveChanges();
         }
 
-        public async Task GuessOrSendMessage(string message, Models.Player player)
+        public async Task GuessOrSendMessage(string message, Player player)
         {
             if (!player.GameRoomId.HasValue)
             {

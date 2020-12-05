@@ -164,5 +164,11 @@ namespace Sketch.DTOs
             {
                 Message = $"\"{nickname}\" has left #{chatName}"
             };
+
+        public static ChatMessage LeftGame(string nickname) =>
+            new ChatMessage
+            {
+                Message = $"\"{nickname}\" has left the game"
+            };
     }
 }
