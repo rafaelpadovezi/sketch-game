@@ -12,5 +12,6 @@ namespace Sketch.Services
         Task StartRound(GameRoom gameRoom);
         Task NextTurn(Guid turnId);
         Task AddToTurn(GameRoom gameroom, Turn turn, Player player);
+        Task PlayerLeavesTurn(GameRoom gameRoom, Player player);
     }
 }

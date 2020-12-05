@@ -68,9 +68,10 @@ namespace Sketch.Services
             await _server.Send(ChatServerResponse.EnterGameRoom(newGameRoom), player);
             gameRoom.Players.Remove(player);
             if (gameRoom.Players.Count == 1)
-            {
                 await _roundService.EndTurn(gameRoom);
-            }
+
+            await _roundService.PlayerLeavesTurn(gameRoom, player);
+            await _gameRoomRepository.SaveChanges();
         }
 
         public async Task GuessOrSendMessage(string message, Models.Player player)

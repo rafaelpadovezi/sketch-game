@@ -413,9 +413,6 @@ namespace Tests.Integration.Services
         [Fact]
         public async Task ShouldEndGameIfGameRoomHasOnePlayer()
         {
-            var gameCycle = (GameLifeCycle)_scope.ServiceProvider.GetService<IGameLifeCycle>();
-            gameCycle.AutoCreateNewTurn = false;
-            gameCycle.TurnDuration = 1_000_000;
             var enteringPlayer = _scenario.MockPlayer1InGeneral;
             var existingPlayer = _scenario.MockPlayerAloneInGameRoom;
             string gameRoom = _scenario.GameRoomWith1Player.Name;
@@ -429,6 +426,44 @@ namespace Tests.Integration.Services
             Assert.Single(rounds);
             Assert.Single(rounds.Last().Turns);
             Assert.NotNull(turn.EndTimestamp);
+        }
+
+        [Fact]
+        public async Task ShouldEndTurnIfPlayerLeavesAndHasNoOneToGuess()
+        {
+            var mockNewPlayer1 = _scenario.MockPlayer1InGeneral;
+            var mockNewPlayer2 = _scenario.MockPlayer2InGeneral;
+            var mockExistingPlayer = _scenario.MockPlayerAloneInGameRoom;
+            string gameRoom = _scenario.GameRoomWith1Player.Name;
+
+            _ = await _sut.NewCommand(mockNewPlayer1.Object.Id, $@"\c {gameRoom}");
+            _ = await _sut.NewCommand(mockNewPlayer2.Object.Id, $@"\c {gameRoom}");
+            _ = await _sut.NewCommand(mockNewPlayer2.Object.Id, "TestWord");
+            _ = await _sut.NewCommand(mockNewPlayer1.Object.Id, @"\c general");
+
+            var rounds = DbContext
+                .GameRooms.Single(x => x.Name == gameRoom).Rounds;
+            var turn = rounds.Single().Turns.Single();
+            Assert.True(turn.EndTimestamp.HasValue);
+        }
+
+        [Fact]
+        public async Task ShouldEndTurnIfPlayerLeavesAndOtherPlayersGuessCorrectly()
+        {
+            var mockNewPlayer1 = _scenario.MockPlayer1InGeneral;
+            var mockNewPlayer2 = _scenario.MockPlayer2InGeneral;
+            var mockExistingPlayer = _scenario.MockPlayerAloneInGameRoom;
+            string gameRoom = _scenario.GameRoomWith1Player.Name;
+
+            _ = await _sut.NewCommand(mockNewPlayer1.Object.Id, $@"\c {gameRoom}");
+            _ = await _sut.NewCommand(mockNewPlayer2.Object.Id, $@"\c {gameRoom}");
+            _ = await _sut.NewCommand(mockNewPlayer1.Object.Id, @"\c general");
+            _ = await _sut.NewCommand(mockNewPlayer2.Object.Id, "TestWord");
+
+            var rounds = DbContext
+                .GameRooms.Single(x => x.Name == gameRoom).Rounds;
+            var turn = rounds.Single().Turns.Single();
+            Assert.True(turn.EndTimestamp.HasValue);
         }
 
         private async Task SimulateNextTurn(GameLifeCycle gameCycle, string gameRoom)

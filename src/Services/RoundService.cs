@@ -157,5 +157,22 @@ namespace Sketch.Services
                     (int)(DateTime.Now - turn.StartTimestamp).TotalMilliseconds),
                 player);
         }
+
+        public async Task PlayerLeavesTurn(GameRoom gameRoom, Player player)
+        {
+            var turn = gameRoom.CurrentTurn();
+            if (turn is null) return;
+
+            var playerTurn = turn.PlayersTurns.SingleOrDefault(x => x.PlayerId == player.Id);
+            if (playerTurn is null) return;
+
+            turn.PlayersTurns.Remove(playerTurn);
+
+            if (turn.PlayersTurns.All(x => x.Hit || x.IsDrawing))
+            {
+                await EndTurn(gameRoom);
+                _gameLifeCycle.ScheduleNextTurn(turn.Id);
+            }
+        }
     }
 }
