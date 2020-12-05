@@ -50,7 +50,8 @@
             class="textarea has-fixed-size"
             rows="3"
             v-model="textInput"
-            v-on:keyup.enter="onMessageInput()"
+            @keyup.enter="onMessageInput()"
+            :disabled="isDrawing"
           ></textarea>
         </div>
         <div class="field">
@@ -81,7 +82,8 @@ export default {
       messages: "messages",
       gameRoom: "gameRoom",
       isConnected: "isConnected",
-      countdown: "countdown"
+      countdown: "countdown",
+      isDrawing: "isDrawing"
     })
   },
   mounted() {

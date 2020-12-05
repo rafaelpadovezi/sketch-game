@@ -10,6 +10,7 @@ const DISCONNECT = "DISCONNECT";
 const SET_GAME_ROOMS = "SET_GAME_ROOMS";
 const CHANGE_ROOM = "CHANGE_ROOM";
 const START_TIMER = "START_TIMER";
+const UPDATE_IS_DRAWING = "UPDATE_IS_DRAWING";
 
 export default {
   strict: process.env.NODE_ENV !== "production",
@@ -21,6 +22,7 @@ export default {
     player: undefined,
     isConnected: false,
     gameRoom: undefined,
+    isDrawing: false,
     timer: {
       total: 0,
       current: 0
@@ -60,6 +62,9 @@ export default {
         state.timer.current--;
         if (state.timer.current <= 0) clearInterval(state.interval);
       }, 1000);
+    },
+    [UPDATE_IS_DRAWING](state, isDrawing) {
+      state.isDrawing = isDrawing;
     }
   },
   actions: {
@@ -77,35 +82,40 @@ export default {
             type: serverResponse.type
           });
           break;
-        case 7:
+        case 7: {
+          // StartTurn
+          const [duration, isDrawing] = serverResponse.details;
           commit(ADD_MESSAGE, {
             content: serverResponse.message,
             type: serverResponse.type
           });
-          commit(START_TIMER, serverResponse.details[0]);
+          commit(START_TIMER, duration);
+          commit(UPDATE_IS_DRAWING, isDrawing);
           break;
+        }
         case 2:
           commit(SET_GAME_ROOMS, serverResponse.details);
           break;
         case 4:
           commit(CHANGE_ROOM, serverResponse.details[0]);
           break;
-        case 5:
-          {
-            const { results } = serverResponse.details[0];
-            commit(ADD_MESSAGE, {
-              content:
-                "******* TURN RESULT ********\n" +
-                "Name".padEnd(18, " ") +
-                "Points\n" +
-                "****************************\n" +
-                Object.keys(results)
-                  .map(key => key.padEnd(18, " ") + results[key])
-                  .join("\n"),
-              type: serverResponse.type
-            });
-          }
+        case 5: {
+          // EndOfTurn
+          const { results } = serverResponse.details[0];
+          commit(ADD_MESSAGE, {
+            content:
+              "******* TURN RESULT ********\n" +
+              "Name".padEnd(18, " ") +
+              "Points\n" +
+              "****************************\n" +
+              Object.keys(results)
+                .map(key => key.padEnd(18, " ") + results[key])
+                .join("\n"),
+            type: serverResponse.type
+          });
+          commit(UPDATE_IS_DRAWING, false);
           break;
+        }
         case 8: {
           const { results } = serverResponse.details[0];
           commit(ADD_MESSAGE, {
@@ -163,6 +173,7 @@ export default {
     isConnected: state => state.isConnected,
     gameRooms: state => state.gameRooms,
     gameRoom: state => state.gameRoom,
-    countdown: state => state.timer.current
+    countdown: state => state.timer.current,
+    isDrawing: state => state.isDrawing
   }
 };

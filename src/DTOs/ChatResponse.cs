@@ -76,7 +76,7 @@ namespace Sketch.DTOs
             {
                 Type = ResponseType.StartOfTurn,
                 Message = $"The word is `{word.Content}`. Start drawing!",
-                Details = new object[] { duration }
+                Details = new object[] { duration, true }
             };
 
         internal static ChatServerResponse StartTurn(Player drawingPlayer, int duration) =>
@@ -84,7 +84,7 @@ namespace Sketch.DTOs
             {
                 Type = ResponseType.StartOfTurn,
                 Message = $"New turn! {drawingPlayer.Username} is drawing",
-                Details = new object[] { duration }
+                Details = new object[] { duration, false }
             };
 
         internal static ChatServerResponse Hit(string guess) =>
