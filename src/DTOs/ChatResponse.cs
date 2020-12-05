@@ -103,11 +103,12 @@ namespace Sketch.DTOs
                     new RankingViewModel
                     {
                         Results = round.Turns
+                            .OrderBy(x => x.StartTimestamp)
                             .Select(turn => turn
                                 .PlayersTurns
                                 .ToDictionary(x => x.Player.Username, x => x.Points ?? 0))
                             .Aggregate((results, turnResults) =>
-                                turnResults.ToDictionary(x => x.Key, x => x.Value + results[x.Key]))
+                                turnResults.ToDictionary(x => x.Key, x => x.Value + (results.ContainsKey(x.Key) ? results[x.Key] : 0)))
                     }
                 }
             };
