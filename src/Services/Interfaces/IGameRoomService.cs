@@ -7,6 +7,6 @@ namespace Sketch.Services
     {
         Task EnterGameRoom(string gameRoomName, Player player);
         Task LeaveGameRoom(Player player, string newGameRoom);
-        Task SendMessage(string message, Player player);
+        Task GuessOrSendMessage(string message, Player player);
     }
 }

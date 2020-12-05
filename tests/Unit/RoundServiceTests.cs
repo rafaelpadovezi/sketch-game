@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using Microsoft.Extensions.Logging;
+using Moq;
 using Sketch.Business;
 using Sketch.Infrastructure.Connection;
 using Sketch.Infrastructure.Database.Repositories.Interfaces;
@@ -25,9 +26,11 @@ namespace Tests.Unit
             var mockGameCycleService = new Mock<IGameLifeCycle>();
             var roundService = new RoundService(
                 Mock.Of<IGameRoomRepository>(),
+                Mock.Of<IPlayerRepository>(),
                 mockWordService.Object,
                 mockServer.Object,
-                mockGameCycleService.Object);
+                mockGameCycleService.Object,
+                Mock.Of<ILogger<RoundService>>());
 
             var player1 = new Player { Id = Guid.NewGuid() };
             var player2 = new Player { Id = Guid.NewGuid() };

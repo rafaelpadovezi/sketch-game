@@ -15,7 +15,7 @@
           </div>
           <div class="column">
             <h2>{{ gameRoom }}</h2>
-            <div>{{ countdown }}</div>
+            <div>{{ Math.round(countdown) }}</div>
           </div>
         </div>
       </article>

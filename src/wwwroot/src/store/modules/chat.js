@@ -58,7 +58,7 @@ export default {
       state.timer.current = state.timer.total;
       state.interval = setInterval(() => {
         state.timer.current--;
-        if (state.timer.current === 0) clearInterval(state.interval);
+        if (state.timer.current <= 0) clearInterval(state.interval);
       }, 1000);
     }
   },
@@ -115,6 +115,7 @@ export default {
               "Points\n" +
               "****************************\n" +
               Object.keys(results)
+                .sort((a, b) => results[b] - results[a])
                 .map(key => key.padEnd(18, " ") + results[key])
                 .join("\n"),
             type: serverResponse.type

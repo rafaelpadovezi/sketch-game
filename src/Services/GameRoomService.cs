@@ -2,6 +2,7 @@
 using Sketch.DTOs;
 using Sketch.Infrastructure.Connection;
 using Sketch.Infrastructure.Database.Repositories.Interfaces;
+using Sketch.Models;
 using System;
 using System.Threading.Tasks;
 
@@ -44,6 +45,14 @@ namespace Sketch.Services
             if (gameroom.Players.Count == 2)
             {
                 await _roundService.StartRound(gameroom);
+                return;
+            }
+
+            var turn = gameroom.CurrentTurn();
+            if (turn is not null)
+            {
+                await _roundService.AddToTurn(gameroom, turn, player);
+                await _gameRoomRepository.SaveChanges();
             }
         }
 
@@ -64,7 +73,7 @@ namespace Sketch.Services
             }
         }
 
-        public async Task SendMessage(string message, Models.Player player)
+        public async Task GuessOrSendMessage(string message, Models.Player player)
         {
             if (!player.GameRoomId.HasValue)
             {
@@ -74,7 +83,14 @@ namespace Sketch.Services
 
             var gameRoom = await _gameRoomRepository.Get(x => x.Id == player.GameRoomId)
                 ?? throw new Exception($"GameRoom '{player.GameRoomId}' not found");
-            await _roundService.GuessWord(gameRoom, player, message);
+            var turn = gameRoom.CurrentTurn();
+            if (turn is null)
+            {
+                await _server.Send(ChatMessage.Public(player.Username, message), gameRoom.Players);
+                return;
+            }
+
+            await _roundService.GuessWord(gameRoom, player, turn, message);
             await _gameRoomRepository.SaveChanges();
         }
 

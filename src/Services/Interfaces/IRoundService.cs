@@ -8,8 +8,9 @@ namespace Sketch.Services
     {
         Task EndTurn(Guid turnId);
         Task EndTurn(GameRoom gameRoom);
-        Task GuessWord(GameRoom gameRoom, Player player, string guess);
+        Task GuessWord(GameRoom gameRoom, Player player, Turn turn, string guess);
         Task StartRound(GameRoom gameRoom);
         Task NextTurn(Guid turnId);
+        Task AddToTurn(GameRoom gameroom, Turn turn, Player player);
     }
 }

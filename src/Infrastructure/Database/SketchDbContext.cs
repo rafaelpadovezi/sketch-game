@@ -24,8 +24,6 @@ namespace Infrastructure.Database
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            modelBuilder.Entity<PlayerTurn>().Ignore(x => x.IsDrawing);
         }
 
         public override int SaveChanges()

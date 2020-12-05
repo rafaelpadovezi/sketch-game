@@ -85,13 +85,9 @@ namespace Sketch.Services
         private async Task SendMessage(Guid playerId, string commandString, ChatCommand command, Models.Player player)
         {
             if (player.GameRoomId.HasValue)
-            {
-                await _gameRoomService.SendMessage(commandString, player);
-            }
+                await _gameRoomService.GuessOrSendMessage(commandString, player);
             else
-            {
                 await _generalRoomService.PlayerSendMessage(playerId, command.Message);
-            }
         }
 
         public async Task NewPlayer(Guid playerId)

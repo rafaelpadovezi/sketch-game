@@ -55,6 +55,7 @@ namespace Tests.Support
                             new Turn
                             {
                                 Word = new Word { Content = "TestWord" },
+                                DrawingPlayer = player1InGameRoom,
                                 PlayersTurns = new List<PlayerTurn>
                                 {
                                     new PlayerTurn
