@@ -17,12 +17,21 @@
             <h2>{{ gameRoom }}</h2>
             <div>{{ Math.round(countdown) }}</div>
           </div>
+          <div class="column">
+            <h3>{{ word }}</h3>
+          </div>
         </div>
       </article>
 
       <article class="tile is-child notification is-primary">
         <div style="">
-          <Canvas :canvas-id="gameRoom" height="400" />
+          <Canvas
+            :canvas-id="gameRoom"
+            :height="400"
+            @draw="onDraw"
+            ref="canvas"
+            :isDrawing="isDrawing"
+          />
         </div>
       </article>
     </div>
@@ -83,14 +92,21 @@ export default {
       gameRoom: "gameRoom",
       isConnected: "isConnected",
       countdown: "countdown",
-      isDrawing: "isDrawing"
+      isDrawing: "isDrawing",
+      word: "word"
     })
   },
   mounted() {
     if (!this.isConnected) this.$router.push("/");
+    const canvas = this.$refs.canvas;
+    this.$store.subscribe(mutation => {
+      if (mutation.type === "chat/REMOTE_DRAWING")
+        canvas.updateDrawing(mutation.payload);
+      if (mutation.type === "chat/RESET_DRAWING") canvas.reset();
+    });
   },
   methods: {
-    ...mapActions("chat", ["sendMessage", "goToGeneral"]),
+    ...mapActions("chat", ["sendMessage", "goToGeneral", "sendDrawing"]),
     onMessageInput() {
       if (this.textInput === "") return;
       this.sendMessage(this.textInput);
@@ -98,6 +114,9 @@ export default {
     },
     onGoBack() {
       this.goToGeneral();
+    },
+    onDraw(pathData) {
+      this.sendDrawing(pathData);
     }
   },
   watch: {

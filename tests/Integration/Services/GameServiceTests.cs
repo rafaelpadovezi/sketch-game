@@ -485,6 +485,28 @@ namespace Tests.Integration.Services
             Assert.True(turn.EndTimestamp.HasValue);
         }
 
+        [Fact]
+        public async Task ShouldSendDrawingToGameRoomPlayers()
+        {
+            var mockPlayerSendMessage = _scenario.MockPlayer1InGameRoom;
+            var gameRoom = _scenario.GameRoomWith2Players;
+
+            var drawing = "M150 0 L75 200 L225 200 Z";
+            _ = await _sut.NewCommand(mockPlayerSendMessage.Object.Id, $@"\path {drawing}");
+
+            mockPlayerSendMessage.Verify(
+                x => x.Send(It.Is<GameResponse>(m =>
+                    m.Details.First().ToString() == drawing && m.Type == ResponseType.Drawing)),
+                Times.Never);
+            _scenario.MockPlayer2InGameRoom.Verify(
+                x => x.Send(It.Is<GameResponse>(m =>
+                    m.Details.First().ToString() == drawing && m.Type == ResponseType.Drawing)),
+                Times.Once);
+            _scenario.MockPlayer1InGeneral.Verify(
+                x => x.Send(It.Is<GameResponse>(m => m.Type == ResponseType.Drawing)),
+                Times.Never);
+        }
+
         private async Task SimulateNextTurn(GameLifeCycle gameCycle, string gameRoom)
         {
             Guid turnId = DbContext

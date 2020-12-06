@@ -11,12 +11,17 @@ const SET_GAME_ROOMS = "SET_GAME_ROOMS";
 const CHANGE_ROOM = "CHANGE_ROOM";
 const START_TIMER = "START_TIMER";
 const UPDATE_IS_DRAWING = "UPDATE_IS_DRAWING";
+const SET_WORD = "SET_WORD";
+
+const REMOTE_DRAWING = "REMOTE_DRAWING";
+const RESET_DRAWING = "RESET_DRAWING";
 
 export default {
   strict: process.env.NODE_ENV !== "production",
   namespaced: true,
   state: {
     socket: undefined,
+    drawings: [],
     gameRooms: [],
     messages: [],
     player: undefined,
@@ -26,7 +31,8 @@ export default {
     timer: {
       total: 0,
       current: 0
-    }
+    },
+    word: undefined
   },
   mutations: {
     [ADD_MESSAGE](state, message) {
@@ -65,6 +71,13 @@ export default {
     },
     [UPDATE_IS_DRAWING](state, isDrawing) {
       state.isDrawing = isDrawing;
+    },
+    [REMOTE_DRAWING](state, drawing) {
+      state.drawings.push(drawing);
+    },
+    [RESET_DRAWING]() {},
+    [SET_WORD](state, word) {
+      state.word = word;
     }
   },
   actions: {
@@ -82,17 +95,6 @@ export default {
             type: serverResponse.type
           });
           break;
-        case 7: {
-          // StartTurn
-          const [duration, isDrawing] = serverResponse.details;
-          commit(ADD_MESSAGE, {
-            content: serverResponse.message,
-            type: serverResponse.type
-          });
-          commit(START_TIMER, duration);
-          commit(UPDATE_IS_DRAWING, isDrawing);
-          break;
-        }
         case 2:
           commit(SET_GAME_ROOMS, serverResponse.details);
           break;
@@ -116,6 +118,19 @@ export default {
           commit(UPDATE_IS_DRAWING, false);
           break;
         }
+        case 7: {
+          // StartTurn
+          const [duration, isDrawing, word] = serverResponse.details;
+          commit(ADD_MESSAGE, {
+            content: serverResponse.message,
+            type: serverResponse.type
+          });
+          commit(RESET_DRAWING);
+          commit(START_TIMER, duration);
+          commit(UPDATE_IS_DRAWING, isDrawing);
+          commit(SET_WORD, word);
+          break;
+        }
         case 8: {
           const { results } = serverResponse.details[0];
           commit(ADD_MESSAGE, {
@@ -130,7 +145,11 @@ export default {
                 .join("\n"),
             type: serverResponse.type
           });
+          break;
         }
+        case 9: // Drawing
+          commit(REMOTE_DRAWING, serverResponse.details[0]);
+          break;
       }
     },
     goToGeneral({ dispatch }) {
@@ -138,6 +157,9 @@ export default {
     },
     changeGameRoom({ dispatch }, gameRoom) {
       dispatch("sendMessage", `\\c ${gameRoom.name}`);
+    },
+    sendDrawing({ state }, path) {
+      state.socket.send(`\\path ${path}`);
     },
     async connect({ commit, dispatch }, player) {
       const socket = new WebSocket(WS_API);
@@ -174,6 +196,7 @@ export default {
     gameRooms: state => state.gameRooms,
     gameRoom: state => state.gameRoom,
     countdown: state => state.timer.current,
-    isDrawing: state => state.isDrawing
+    isDrawing: state => state.isDrawing,
+    word: state => (state.isDrawing ? state.word : undefined)
   }
 };

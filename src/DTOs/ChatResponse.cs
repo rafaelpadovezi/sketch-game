@@ -16,7 +16,8 @@ namespace Sketch.DTOs
         EndOfTurn,
         Hit,
         StartOfTurn,
-        EndOfRound
+        EndOfRound,
+        Drawing
     }
 
     public class ChatServerResponse
@@ -76,7 +77,7 @@ namespace Sketch.DTOs
             {
                 Type = ResponseType.StartOfTurn,
                 Message = $"The word is `{word.Content}`. Start drawing!",
-                Details = new object[] { duration, true }
+                Details = new object[] { duration, true, word.Content }
             };
 
         internal static ChatServerResponse StartTurn(Player drawingPlayer, int duration) =>
@@ -111,6 +112,13 @@ namespace Sketch.DTOs
                                 turnResults.ToDictionary(x => x.Key, x => x.Value + (results.ContainsKey(x.Key) ? results[x.Key] : 0)))
                     }
                 }
+            };
+
+        public static GameResponse Drawing(string drawing) =>
+            new GameResponse
+            {
+                Type = ResponseType.Drawing,
+                Details = new object [] { drawing }
             };
     }
 

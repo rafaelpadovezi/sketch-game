@@ -15,7 +15,15 @@
 const paper = require("paper");
 export default {
   name: "Canvas",
-  props: ["canvasId", "height"],
+  emits: ["draw"],
+  props: {
+    canvasId: String,
+    height: Number,
+    isDrawing: {
+      type: Boolean,
+      default: false
+    }
+  },
   data: () => ({
     path: null,
     scope: null
@@ -23,6 +31,13 @@ export default {
   methods: {
     reset() {
       this.scope.project.activeLayer.removeChildren();
+    },
+    updateDrawing(path) {
+      this.scope.activate();
+      this.path = new paper.Path(path);
+      this.path.strokeColor = "#000000";
+      this.path.strokeJoin = "round";
+      this.path.strokeWidth = 1.5;
     },
     pathCreate(scope) {
       scope.activate();
@@ -42,17 +57,21 @@ export default {
       // create drawing tool
       this.tool = this.createTool(this.scope);
       this.tool.onMouseDown = event => {
+        if (!this.isDrawing) return;
         // init path
         self.path = self.pathCreate(self.scope);
         // add point to path
         self.path.add(event.point);
       };
       this.tool.onMouseDrag = event => {
+        if (!this.isDrawing) return;
         self.path.add(event);
       };
       this.tool.onMouseUp = event => {
+        if (!this.isDrawing) return;
         // line completed
         self.path.add(event.point);
+        self.$emit("draw", self.path.pathData);
       };
     }
   },
