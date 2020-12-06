@@ -1,6 +1,8 @@
 ﻿using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Sketch.Models;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sketch.Services
@@ -16,7 +18,14 @@ namespace Sketch.Services
 
         public async Task<Word> PickWord(GameRoomType type)
         {
-            return await _context.Words.FirstAsync();
+            var query = _context.Words
+                .Where(x => x.GameRoomType == type);
+            Random rand = new Random();
+            int toSkip = rand.Next(1, await query.CountAsync());
+            return await query
+                .OrderBy(x => x.Id)
+                .Skip(toSkip)
+                .FirstAsync();
         }
     }
 }

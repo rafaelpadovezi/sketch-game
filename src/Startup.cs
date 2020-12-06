@@ -117,16 +117,11 @@ namespace Sketch
             }
 
             logger.LogInformation("Saving entities...");
-            var player = new List<Player>()
-            {
-                new Player { Username = "player1" }
-            };
             var gameRooms = new List<GameRoom>
             {
                 new GameRoom
                 {
-                    Name = "General 1", Type = GameRoomType.General,
-                    Players = new List<Player> { new Player { Username = "player2" } }
+                    Name = "General 1", Type = GameRoomType.General
                 },
                 new GameRoom { Name = "General 2", Type = GameRoomType.General },
                 new GameRoom { Name = "Animals", Type = GameRoomType.Animals },
@@ -136,18 +131,68 @@ namespace Sketch
             {
                 new Word { Content = "horse", GameRoomType = GameRoomType.Animals },
                 new Word { Content = "frog", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "cat", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "seagull", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "ferret", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "monkey", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "ant", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "bee", GameRoomType = GameRoomType.Animals },
                 new Word { Content = "paltypus", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "giraffe", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "starfish", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "shark", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "capybara", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "eagle", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "dragonfly", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "boar", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "cheetah", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "anteater", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "hyena", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "seal", GameRoomType = GameRoomType.Animals },
+                new Word { Content = "penguin", GameRoomType = GameRoomType.Animals },
+
                 new Word { Content = "spring", GameRoomType = GameRoomType.General },
                 new Word { Content = "circus", GameRoomType = GameRoomType.General },
                 new Word { Content = "battery", GameRoomType = GameRoomType.General },
                 new Word { Content = "thief", GameRoomType = GameRoomType.General },
                 new Word { Content = "palace", GameRoomType = GameRoomType.General },
                 new Word { Content = "toast", GameRoomType = GameRoomType.General },
+                new Word { Content = "dragonfly", GameRoomType = GameRoomType.General },
+                new Word { Content = "starfish", GameRoomType = GameRoomType.General },
+                new Word { Content = "baseball", GameRoomType = GameRoomType.General },
+                new Word { Content = "golf", GameRoomType = GameRoomType.General },
+                new Word { Content = "spoon", GameRoomType = GameRoomType.General },
+                new Word { Content = "tail", GameRoomType = GameRoomType.General },
+                new Word { Content = "photographer", GameRoomType = GameRoomType.General },
+                new Word { Content = "penguin", GameRoomType = GameRoomType.General },
+                new Word { Content = "baseball", GameRoomType = GameRoomType.General },
+                new Word { Content = "Dumbo", GameRoomType = GameRoomType.General },
+                new Word { Content = "ballet", GameRoomType = GameRoomType.General },
+                new Word { Content = "christmas tree", GameRoomType = GameRoomType.General },
+                new Word { Content = "banana peel", GameRoomType = GameRoomType.General },
+                new Word { Content = "coffee", GameRoomType = GameRoomType.General },
+                new Word { Content = "firefighter", GameRoomType = GameRoomType.General },
+                new Word { Content = "waterfall", GameRoomType = GameRoomType.General },
+                new Word { Content = "pokeball", GameRoomType = GameRoomType.General },
+
                 new Word { Content = "muggle", GameRoomType = GameRoomType.HarryPotter },
                 new Word { Content = "blasted-ended skrewt", GameRoomType = GameRoomType.HarryPotter },
                 new Word { Content = "Wingardium Leviosa", GameRoomType = GameRoomType.HarryPotter },
+                new Word { Content = "Oliver Wood", GameRoomType = GameRoomType.HarryPotter },
+                new Word { Content = "Severus Snape", GameRoomType = GameRoomType.HarryPotter },
+                new Word { Content = "Dobby", GameRoomType = GameRoomType.HarryPotter },
+                new Word { Content = "Dementor", GameRoomType = GameRoomType.HarryPotter },
+                new Word { Content = "prefect", GameRoomType = GameRoomType.HarryPotter },
+                new Word { Content = "garden gnome", GameRoomType = GameRoomType.HarryPotter },
+                new Word { Content = "Nagini", GameRoomType = GameRoomType.HarryPotter },
+                new Word { Content = "Expelliarmus", GameRoomType = GameRoomType.HarryPotter },
+                new Word { Content = "Hippogriff", GameRoomType = GameRoomType.HarryPotter },
+                new Word { Content = "Norbert", GameRoomType = GameRoomType.HarryPotter },
+                new Word { Content = "Gringotts", GameRoomType = GameRoomType.HarryPotter },
+                new Word { Content = "Trevor", GameRoomType = GameRoomType.HarryPotter },
+                new Word { Content = "golden snitch", GameRoomType = GameRoomType.HarryPotter },
+                new Word { Content = "seeker", GameRoomType = GameRoomType.HarryPotter },
             };
-            context.AddRange(player);
             context.AddRange(gameRooms);
             context.AddRange(words);
 
