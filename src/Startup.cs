@@ -107,6 +107,9 @@ namespace Sketch
 
         private static void SeedDb(SketchDbContext context, ILogger<Startup> logger)
         {
+            logger.LogInformation(" Cleaning up old broken state");
+            CleanUpOldBrokenState(context);
+
             if (context.GameRooms.Any())
             {
                 logger.LogInformation("Database has already been seeded. Skipping it...");
@@ -116,10 +119,7 @@ namespace Sketch
             logger.LogInformation("Saving entities...");
             var gameRooms = new List<GameRoom>
             {
-                new GameRoom
-                {
-                    Name = "General 1", Type = GameRoomType.General
-                },
+                new GameRoom { Name = "General 1", Type = GameRoomType.General },
                 new GameRoom { Name = "General 2", Type = GameRoomType.General },
                 new GameRoom { Name = "Animals", Type = GameRoomType.Animals },
                 new GameRoom { Name = "Harry Potter", Type = GameRoomType.HarryPotter },
@@ -194,6 +194,27 @@ namespace Sketch
             context.AddRange(words);
 
             logger.LogInformation("Database has been seeded successfully.");
+            context.SaveChanges();
+        }
+
+        private static void CleanUpOldBrokenState(SketchDbContext context)
+        {
+            var players = context.Players.Where(x => x.IsActive);
+            foreach (var player in players)
+                player.IsActive = false;
+
+            players = context.Players.Where(x => x.GameRoomId.HasValue);
+            foreach (var player in players)
+                player.GameRoomId = null;
+
+            var turns = context.Turns.Where(x => !x.EndTimestamp.HasValue);
+            foreach (var turn in turns)
+                turn.EndTimestamp = DateTime.Now;
+
+            var rounds = context.Rounds.Where(x => !x.EndTimestamp.HasValue);
+            foreach (var round in rounds)
+                round.EndTimestamp = DateTime.Now;
+
             context.SaveChanges();
         }
     }
