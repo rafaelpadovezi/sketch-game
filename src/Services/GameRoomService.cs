@@ -4,6 +4,7 @@ using Sketch.Infrastructure.Connection;
 using Sketch.Infrastructure.Database.Repositories.Interfaces;
 using Sketch.Models;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sketch.Services
@@ -40,7 +41,7 @@ namespace Sketch.Services
             await _gameRoomRepository.SaveChanges();
 
             await _server.Send(ChatServerResponse.EnterGameRoom(gameroom.Name), player);
-            await SendGameRoomMessage(ChatMessage.NewPlayer(gameroom.Name, player.Username), player, gameroom);
+            await SendGameRoomMessage(ChatMessage.NewPlayer(gameroom.Name, player.Username), gameroom);
 
             if (gameroom.Players.Count == 2)
             {
@@ -64,7 +65,7 @@ namespace Sketch.Services
             var gameRoom = (await _gameRoomRepository.GetById(gameRoomId))
                 ?? throw new Exception($"GameRoom '{player.GameRoomId}' not found");
 
-            await SendGameRoomMessage(ChatMessage.ChangeRoom(player.Username, newGameRoom), player, gameRoom);
+            await SendGameRoomMessage(ChatMessage.ChangeRoom(player.Username, newGameRoom), gameRoom);
             await _server.Send(ChatServerResponse.EnterGameRoom(newGameRoom), player);
             await RemovePlayer(gameRoom, player);
         }
@@ -77,7 +78,7 @@ namespace Sketch.Services
             var gameRoom = (await _gameRoomRepository.GetById(gameRoomId))
                 ?? throw new Exception($"GameRoom '{player.GameRoomId}' not found");
 
-            await SendGameRoomMessage(ChatMessage.LeftGame(player.Username), player, gameRoom);
+            await SendGameRoomMessage(ChatMessage.LeftGame(player.Username), gameRoom);
             await RemovePlayer(gameRoom, player);
         }
 
@@ -112,7 +113,17 @@ namespace Sketch.Services
             await _gameRoomRepository.SaveChanges();
         }
 
-        private async Task SendGameRoomMessage(ChatMessage message, Models.Player player, Models.GameRoom gameRoom)
+        public async Task SendDrawing(Player player, Guid gameRoomId, string drawing)
+        {
+            var gameRoom = (await _gameRoomRepository.GetById(gameRoomId))
+                ?? throw new Exception($"GameRoom '{player.GameRoomId}' not found");
+            var gameRoomPlayers =
+                (await _playerRepository.GetAll(x => x.GameRoomId == gameRoom.Id))
+                    .Where(x => x.Id != player.Id);
+            await _server.Send(GameResponse.Drawing(drawing), gameRoomPlayers);
+        }
+
+        private async Task SendGameRoomMessage(ChatMessage message, GameRoom gameRoom)
         {
             var gameRoomPlayers = await _playerRepository.GetAll(x => x.GameRoomId == gameRoom.Id);
             await _server.Send(message, gameRoomPlayers);

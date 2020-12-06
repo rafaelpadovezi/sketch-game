@@ -108,5 +108,14 @@ namespace Tests.Unit
             Assert.Equal(CommandType.Error, command.Type);
             Assert.Equal(DestinataryType.Self, command.DestinataryType);
         }
+
+        [Fact]
+        public void ShouldParsePath()
+        {
+            var command = CommandParser.Parse(@"\path M150 0 L75 200 L225 200 Z");
+
+            Assert.Equal(CommandType.Drawing, command.Type);
+            Assert.Equal("M150 0 L75 200 L225 200 Z", command.Drawing);
+        }
     }
 }

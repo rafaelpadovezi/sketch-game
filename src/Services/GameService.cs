@@ -50,7 +50,8 @@ namespace Sketch.Services
 
             var commandTask = command.Type switch
             {
-                CommandType.PublicMessage  => SendMessage(playerId, commandString, command, player),
+                CommandType.Drawing => SendDrawing(player, command),
+                CommandType.PublicMessage  => SendMessage(playerId, command, player),
                 CommandType.ChangeGameRoom => ChangeGameRoom(playerId, command, player),
                 CommandType.ListChatRooms  => ListGameRooms(player),
                 _ => Task.CompletedTask
@@ -59,6 +60,17 @@ namespace Sketch.Services
             await commandTask;
 
             return command.Type == CommandType.Exit;
+        }
+
+        private async Task SendDrawing(Models.Player player, ChatCommand command)
+        {
+            if (!player.GameRoomId.HasValue)
+            {
+                _logger.LogWarning("Can't send drawing if not in game room");
+                return;
+            }
+
+            await _gameRoomService.SendDrawing(player, player.GameRoomId.Value, command.Drawing);
         }
 
         private async Task ListGameRooms(Models.Player player)
@@ -82,10 +94,10 @@ namespace Sketch.Services
             }
         }
 
-        private async Task SendMessage(Guid playerId, string commandString, ChatCommand command, Models.Player player)
+        private async Task SendMessage(Guid playerId, ChatCommand command, Models.Player player)
         {
             if (player.GameRoomId.HasValue)
-                await _gameRoomService.GuessOrSendMessage(commandString, player);
+                await _gameRoomService.GuessOrSendMessage(command.Message, player);
             else
                 await _generalRoomService.PlayerSendMessage(playerId, command.Message);
         }

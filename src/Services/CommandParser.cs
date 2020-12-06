@@ -10,6 +10,7 @@ namespace Sketch.Services
         public DestinataryType DestinataryType { get; set; }
         public string Destinatary { get; set; } = string.Empty;
         public string GameRoomName { get; set; } = string.Empty;
+        public string Drawing { get; set; } = string.Empty;
     }
 
     public enum CommandType
@@ -23,7 +24,9 @@ namespace Sketch.Services
         Kudos,
         Exit,
         Error,
-        Help
+        Help,
+
+        Drawing
     }
 
     public enum DestinataryType
@@ -51,6 +54,7 @@ namespace Sketch.Services
         private const string PublicMessageToUserCommand = @"\u";
         private const string PrivateMessageToUserCommand = @"\p";
         private const string KudosCommand = @"\kudos";
+        private const string PathCommand = @"\path";
         private const char Separator = ' ';
         private static readonly string[] DestinataryCommands =
             {
@@ -82,6 +86,11 @@ namespace Sketch.Services
                 return ParseChangeRoomCommand(commandString);
             }
 
+            if (Is(PathCommand, commandString))
+            {
+                return ParsePathCommand(commandString);
+            }
+
             if (Is(ListGameRoomsCommand, commandString))
             {
                 return new ChatCommand
@@ -109,6 +118,15 @@ namespace Sketch.Services
             return InvalidCommand(commandString);
         }
 
+        private static ChatCommand ParsePathCommand(string commandString)
+        {
+            return new ChatCommand
+            {
+                Type = CommandType.Drawing,
+                Drawing = commandString[(commandString.IndexOf(Separator) + 1) ..]
+            };
+        }
+
         private static ChatCommand ParseChangeRoomCommand(string commandString)
         {
             if (commandString.Split(Separator).Length == 1)
@@ -116,8 +134,7 @@ namespace Sketch.Services
                 return ChatRoomError;
             }
 
-            string chatRoomName = commandString
-                .Substring(commandString.IndexOf(Separator) + 1);
+            string chatRoomName = commandString[(commandString.IndexOf(Separator) + 1) ..];
             if (!chatRoomName.Any())
             {
                 return ChatRoomError;
