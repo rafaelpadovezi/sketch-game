@@ -78,7 +78,7 @@ namespace Sketch
                 endpoints.MapControllers();
             });
 
-            Migrate(app, logger, Env.IsDevelopment());
+            Migrate(app, logger, true);
 
             app.UseGameServer();
         }
@@ -86,7 +86,7 @@ namespace Sketch
         public static readonly ILoggerFactory ConsoleLoggerFactory
             = LoggerFactory.Create(builder => { builder.AddDebug(); });
 
-        public static void Migrate(IApplicationBuilder app, ILogger<Startup> logger, bool executeSeedDb = false)
+        public static void Migrate(IApplicationBuilder app, ILogger<Startup> logger, bool executeSeedDb)
         {
             using var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope();
             using var context = serviceScope.ServiceProvider.GetService<SketchDbContext>();
@@ -99,10 +99,7 @@ namespace Sketch
             }
 
             // seeding DB only when asked
-            if (!executeSeedDb)
-            {
-                return;
-            }
+            if (!executeSeedDb) return;
 
             logger.LogInformation("Seeding the database...");
             SeedDb(context, logger);
