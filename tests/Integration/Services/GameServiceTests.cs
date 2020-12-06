@@ -422,14 +422,34 @@ namespace Tests.Integration.Services
 
             var rounds = DbContext
                 .GameRooms.Single(x => x.Name == gameRoom).Rounds;
-            var turn = rounds.Last().Turns.Last();
             Assert.Single(rounds);
-            Assert.Single(rounds.Last().Turns);
+            Assert.NotNull(rounds.Single().EndTimestamp);
+            var turn = rounds.Single().Turns.Single();
+            Assert.Single(rounds.Single().Turns);
             Assert.NotNull(turn.EndTimestamp);
         }
 
         [Fact]
-        public async Task ShouldEndTurnIfPlayerLeavesAndHasNoOneToGuess()
+        public async Task ShouldEndGameIfDrawingPlayerLeavesAndGameRoomHasOnePlayer()
+        {
+            var enteringPlayer = _scenario.MockPlayer1InGeneral;
+            var existingPlayer = _scenario.MockPlayerAloneInGameRoom;
+            string gameRoom = _scenario.GameRoomWith1Player.Name;
+
+            _ = await _sut.NewCommand(enteringPlayer.Object.Id, $@"\c {gameRoom}");
+            _ = await _sut.NewCommand(existingPlayer.Object.Id, @"\c general");
+
+            var rounds = DbContext
+                .GameRooms.Single(x => x.Name == gameRoom).Rounds;
+            Assert.Single(rounds);
+            Assert.NotNull(rounds.Single().EndTimestamp);
+            var turn = rounds.Single().Turns.Single();
+            Assert.Single(rounds.Single().Turns);
+            Assert.NotNull(turn.EndTimestamp);
+        }
+
+        [Fact]
+        public async Task ShouldEndTurnIfPlayerLeavesRoomAndHasNoOneToGuess()
         {
             var mockNewPlayer1 = _scenario.MockPlayer1InGeneral;
             var mockNewPlayer2 = _scenario.MockPlayer2InGeneral;
@@ -448,7 +468,7 @@ namespace Tests.Integration.Services
         }
 
         [Fact]
-        public async Task ShouldEndTurnIfPlayerLeaveGameAndHasNoOneToGuess()
+        public async Task ShouldEndTurnIfPlayerLeavesGameAndHasNoOneToGuess()
         {
             var mockNewPlayer1 = _scenario.MockPlayer1InGeneral;
             var mockNewPlayer2 = _scenario.MockPlayer2InGeneral;
@@ -478,6 +498,24 @@ namespace Tests.Integration.Services
             _ = await _sut.NewCommand(mockNewPlayer2.Object.Id, $@"\c {gameRoom}");
             _ = await _sut.NewCommand(mockNewPlayer1.Object.Id, @"\c general");
             _ = await _sut.NewCommand(mockNewPlayer2.Object.Id, "TestWord");
+
+            var rounds = DbContext
+                .GameRooms.Single(x => x.Name == gameRoom).Rounds;
+            var turn = rounds.Single().Turns.Single();
+            Assert.True(turn.EndTimestamp.HasValue);
+        }
+
+        [Fact]
+        public async Task ShouldEndTurnIfDrawingPlayerLeaves()
+        {
+            var mockNewPlayer1 = _scenario.MockPlayer1InGeneral;
+            var mockNewPlayer2 = _scenario.MockPlayer2InGeneral;
+            var mockExistingPlayer = _scenario.MockPlayerAloneInGameRoom;
+            string gameRoom = _scenario.GameRoomWith1Player.Name;
+
+            _ = await _sut.NewCommand(mockNewPlayer1.Object.Id, $@"\c {gameRoom}");
+            _ = await _sut.NewCommand(mockNewPlayer2.Object.Id, $@"\c {gameRoom}");
+            _ = await _sut.NewCommand(mockExistingPlayer.Object.Id, @"\c general");
 
             var rounds = DbContext
                 .GameRooms.Single(x => x.Name == gameRoom).Rounds;

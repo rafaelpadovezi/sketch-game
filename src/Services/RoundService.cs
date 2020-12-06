@@ -109,7 +109,7 @@ namespace Sketch.Services
             await _serverConnection.Send(GameResponse.EndOfTurn(turn), gameRoom.Players);
 
             var round = gameRoom.CurrentRound();
-            if (round?.IsComplete(gameRoom.Players) ?? false)
+            if (gameRoom.Players.Count == 1 || (round?.IsComplete(gameRoom.Players) ?? false))
             {
                 round.EndTimestamp = DateTime.Now;
                 await _serverConnection.Send(
@@ -168,7 +168,7 @@ namespace Sketch.Services
 
             turn.PlayersTurns.Remove(playerTurn);
 
-            if (turn.PlayersTurns.All(x => x.Hit || x.IsDrawing))
+            if (turn.PlayersTurns.All(x => x.Hit || x.IsDrawing) || turn.DrawingPlayerId == player.Id)
             {
                 await EndTurn(gameRoom);
                 _gameLifeCycle.ScheduleNextTurn(turn.Id);

@@ -16,7 +16,7 @@ namespace Tests.Integration
         {
             // arrange
             var username = "Player123";
-            var _ = new TestingScenarioBuilder(DbContext, Server);
+            _ = new TestingScenarioBuilder(DbContext, Server);
 
             // act
             var response = await Client.PostJsonAsync(url, username);
@@ -32,7 +32,7 @@ namespace Tests.Integration
         public async Task ShouldReturnLoginIsTakenError(string url)
         {
             // arrange
-            var testingScenarioBuilder = new TestingScenarioBuilder(DbContext, Server);
+            _ = new TestingScenarioBuilder(DbContext, Server);
             var username = DbContext.Players.First().Username;
 
             // act
