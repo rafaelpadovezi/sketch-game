@@ -33,14 +33,15 @@ COPY --from=build-env /app/src/out .
 
 ENV ASPNETCORE_URLS=http://0.0.0.0:80
 
-HEALTHCHECK CMD curl --fail http://localhost:8080/health/ready || exit 1
+HEALTHCHECK CMD curl --fail http://localhost:80/health/ready || exit 1
 
 # Enable SSH https://docs.microsoft.com/en-us/azure/app-service/configure-custom-container?pivots=container-linux#enable-ssh
 RUN apk add openssh \
      && echo "root:Docker!" | chpasswd
+ENV SSH_PORT 2222
+EXPOSE 2222 80
 COPY sshd_config /etc/ssh/
-EXPOSE 80 2222
 
-COPY ./scripts/start-app.sh ./start-app.sh
-RUN chmod u+x ./start-app.sh
-ENTRYPOINT ["./start-app.sh"]
+COPY ./scripts/init-container.sh ./init-container.sh
+RUN chmod u+x ./init-container.sh
+ENTRYPOINT ["./init-container.sh"]
