@@ -1,6 +1,9 @@
 *
 !src
+!scripts
 **/bin
 **/obj
 **/out
 **/Properties
+**/node_modules
+.git

@@ -1,6 +1,8 @@
 using AutoMapper;
+using HealthChecks.UI.Client;
 using Infrastructure.Database;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -51,6 +53,13 @@ namespace Sketch
                 // MVC Stuff
                 .AddControllers()
                 .AddNewtonsoftJson(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+
+            services.AddHealthChecks()
+                .AddNpgSql(Configuration.GetConnectionString("DBConnection"), tags: new[] { "ready" });
+
+            services
+                .AddHealthChecksUI()
+                .AddInMemoryStorage();
         }
 
         public void Configure(IApplicationBuilder app, ILogger<Startup> logger)
@@ -76,11 +85,33 @@ namespace Sketch
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+
+                endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions
+                {
+                    Predicate = check => check.Tags.Contains("ready"),
+                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+                    AllowCachingResponses = false
+                });
+
+                endpoints.MapHealthChecks("/health/live", new HealthCheckOptions
+                {
+                    Predicate = check => !check.Tags.Contains("ready"),
+                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+                    AllowCachingResponses = false
+                });
+
+                endpoints.MapHealthChecks("/healthui", new HealthCheckOptions()
+                {
+                    Predicate = _ => true,
+                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+                });
             });
 
             Migrate(app, logger, true);
 
             app.UseGameServer();
+
+            app.UseHealthChecksUI();
         }
 
         public static readonly ILoggerFactory ConsoleLoggerFactory

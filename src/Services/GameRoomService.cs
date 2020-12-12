@@ -50,7 +50,7 @@ namespace Sketch.Services
             }
 
             var turn = gameroom.CurrentTurn();
-            if (turn is not null)
+            if (turn != null)
             {
                 await _roundService.AddToTurn(gameroom, turn, player);
                 await _gameRoomRepository.SaveChanges();

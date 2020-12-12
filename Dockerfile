@@ -25,11 +25,14 @@ ARG MAIN_PROJECT_NAME
 ARG DOTNETCORE_VERSION
 
 # Installing some libraries required by .NET Core on Alpine Linux
-RUN apk add --no-cache libstdc++ libintl icu
+RUN apk add --no-cache libstdc++ libintl icu curl
 
 # Copies from the build environment the compiled files of the out folder
 WORKDIR /app
 COPY --from=build-env /app/src/out .
 
-ENV ASPNETCORE_URLS=http://0.0.0.0:80  
+ENV ASPNETCORE_URLS=http://0.0.0.0:80
+
+HEALTHCHECK CMD curl --fail http://localhost:8080/health/ready || exit 1
+
 ENTRYPOINT ["./Sketch"]
