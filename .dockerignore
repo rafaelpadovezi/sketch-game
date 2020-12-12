@@ -1,6 +1,7 @@
 *
 !src
 !scripts
+!sshd_config
 **/bin
 **/obj
 **/out
