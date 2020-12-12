@@ -25,7 +25,7 @@ ARG MAIN_PROJECT_NAME
 ARG DOTNETCORE_VERSION
 
 # Installing some libraries required by .NET Core on Alpine Linux
-RUN apk add --no-cache libstdc++ libintl icu curl
+RUN apk add --no-cache libstdc++ libintl icu curl bash
 
 # Copies from the build environment the compiled files of the out folder
 WORKDIR /app
@@ -35,4 +35,12 @@ ENV ASPNETCORE_URLS=http://0.0.0.0:80
 
 HEALTHCHECK CMD curl --fail http://localhost:8080/health/ready || exit 1
 
-ENTRYPOINT ["./Sketch"]
+# Enable SSH https://docs.microsoft.com/en-us/azure/app-service/configure-custom-container?pivots=container-linux#enable-ssh
+RUN apk add openssh \
+     && echo "root:Docker!" | chpasswd
+COPY sshd_config /etc/ssh/
+EXPOSE 80 2222
+
+COPY ./scripts/start-app.sh ./start-app.sh
+RUN chmod u+x ./start-app.sh
+ENTRYPOINT ["./start-app.sh"]
