@@ -39,7 +39,7 @@ HEALTHCHECK CMD curl --fail http://localhost:8080/health/ready || exit 1
 RUN apk add openssh \
      && echo "root:Docker!" | chpasswd
 COPY sshd_config /etc/ssh/
-EXPOSE 80 2222
+EXPOSE 2222 80
 
 COPY ./scripts/start-app.sh ./start-app.sh
 RUN chmod u+x ./start-app.sh
