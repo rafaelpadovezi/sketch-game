@@ -86,7 +86,7 @@ export default {
 .canvas {
   cursor: crosshair;
   background: white;
-  width: 100%;
+  width: 530px;
   display: block;
   margin: auto;
 }

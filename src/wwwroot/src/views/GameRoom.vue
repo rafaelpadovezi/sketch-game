@@ -1,12 +1,14 @@
 <template>
-  <div class="tile is-ancestor">
-    <div class="tile is-6 is-parent is-vertical">
-      <article class="tile is-child">
-        <div class="container">
-          <h2 class="title is-2">Sketch</h2>
-        </div>
-      </article>
-      <article class="tile is-child">
+  <div class="main">
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+      <div class="navbar-brand">
+        <span class="navbar-item">
+          <h1 class="title is-2">Sketch</h1>
+        </span>
+      </div>
+    </nav>
+    <div class="content">
+      <div class="sk-section">
         <div class="columns">
           <div class="column is-1">
             <span class="icon is-large is-clickable" @click="onGoBack()">
@@ -15,16 +17,15 @@
           </div>
           <div class="column">
             <h2>{{ gameRoom }}</h2>
-            <div>{{ Math.round(countdown) }}</div>
+            <div>Countdown: {{ Math.round(countdown) }}</div>
           </div>
           <div class="column">
-            <h3>{{ word }}</h3>
+            <div class="guess-word" v-if="isDrawing">
+              <h3>{{ word }}</h3>
+            </div>
           </div>
         </div>
-      </article>
-
-      <article class="tile is-child notification is-primary">
-        <div style="">
+        <div class="notification is-primary canvas-outer">
           <Canvas
             :canvas-id="gameRoom"
             :height="400"
@@ -33,42 +34,39 @@
             :isDrawing="isDrawing"
           />
         </div>
-      </article>
-    </div>
-
-    <div class="tile is-6 is-parent is-vertical">
-      <article class="tile is-child">
-        <div class="select is-multiple is-fullwidth"></div>
-      </article>
-
-      <article class="tile is-child notification is-primary">
-        <div class="chat">
-          <p
-            v-for="(message, index) in messages"
-            :key="index"
-            :class="{ 'has-text-primary': message.hit }"
-          >
-            <span style="white-space: pre;">{{ message.content }}</span>
-          </p>
+      </div>
+      <div class="sk-section">
+        <div class="notification is-primary chat-outer my-class">
+          <div class="wrapper">
+            <div class="chat">
+              <p
+                v-for="(message, index) in messages"
+                :key="index"
+                :class="{ 'has-text-primary': message.hit }"
+              >
+                <span style="white-space: pre;">{{ message.content }}</span>
+              </p>
+            </div>
+          </div>
         </div>
-      </article>
 
-      <article class="tile is-child notification is-primary">
-        <div class="field">
-          <textarea
-            class="textarea has-fixed-size"
-            rows="3"
-            v-model="textInput"
-            @keyup.enter="onMessageInput()"
-            :disabled="isDrawing"
-          ></textarea>
+        <div class="notification is-primary">
+          <div class="field">
+            <textarea
+              class="textarea has-fixed-size"
+              rows="3"
+              v-model="textInput"
+              @keyup.enter="onMessageInput()"
+              :disabled="isDrawing"
+            ></textarea>
+          </div>
+          <div class="field">
+            <button class="button is-default" @click="onMessageInput()">
+              Send
+            </button>
+          </div>
         </div>
-        <div class="field">
-          <button class="button is-default" @click="onMessageInput()">
-            Send
-          </button>
-        </div>
-      </article>
+      </div>
     </div>
   </div>
 </template>
@@ -94,21 +92,30 @@ export default {
       countdown: "countdown",
       isDrawing: "isDrawing",
       word: "word"
-    })
+    }),
+    messageCount() {
+      return this.messages.length;
+    }
   },
   mounted() {
     if (!this.isConnected) this.$router.push("/");
+
     const canvas = this.$refs.canvas;
     this.$store.subscribe(mutation => {
       if (mutation.type === "chat/REMOTE_DRAWING")
         canvas.updateDrawing(mutation.payload);
       if (mutation.type === "chat/RESET_DRAWING") canvas.reset();
     });
+
+    this.$watch("messageCount", () => {
+      const lastMessage = document.querySelector(".chat p:last-child");
+      if (lastMessage) this.$nextTick(() => lastMessage.scrollIntoView());
+    });
   },
   methods: {
     ...mapActions("chat", ["sendMessage", "goToGeneral", "sendDrawing"]),
     onMessageInput() {
-      if (this.textInput === "") return;
+      if (this.textInput.trim() === "") return;
       this.sendMessage(this.textInput);
       this.textInput = "";
     },
@@ -126,3 +133,10 @@ export default {
   }
 };
 </script>
+
+<style>
+.canvas-outer {
+  width: fit-content;
+  align-self: center;
+}
+</style>
