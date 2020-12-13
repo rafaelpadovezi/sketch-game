@@ -22,7 +22,7 @@ services:
     - "${ASPNETCORE_SOCKET_BIND_PORT}:${ASPNETCORE_SOCKET_BIND_PORT}"
     depends_on:
       - db
-      - es
+      - elk
     command:
       [
       "./scripts/wait-for-it.sh",
@@ -31,7 +31,7 @@ services:
         "120",
         "--",
       "./scripts/wait-for-it.sh",
-        "es:9200",
+        "elk:9200",
         "-t",
         "120",
         "--",
@@ -61,69 +61,13 @@ services:
       ]
 
   # ELK stack
-  # warning: ES is fine, but kibana/logstash are VERY slow to boot
-  es:
-    build:
-      context: build/elasticsearch/
-      args:
-        ELK_VERSION: 7.8.0
-    container_name: sketch-es
-    volumes:
-      - type: bind
-        source: ./build/elasticsearch/config/elasticsearch.yml
-        target: /usr/share/elasticsearch/config/elasticsearch.yml
-        read_only: true
-      - type: volume
-        source: elasticsearch
-        target: /usr/share/elasticsearch/data
+  elk:
+    container_name: sketch-elk
+    image: sebp/elk
     ports:
+      - "5601:5601"
       - "9200:9200"
-      - "9300:9300"
+      - "5044:5044"
     environment:
-      ES_JAVA_OPTS: "-Xms256m -Xmx512m"
-      ELASTIC_PASSWORD: elastic
-      discovery.type: single-node
-
-#  logstash:
-#    build:
-#      context: build/logstash/
-#      args:
-#        ELK_VERSION: 7.8.0
-#    container_name: sketch-logstash
-#    volumes:
-#      - type: bind
-#        source: ./build/logstash/config/logstash.yml
-#        target: /usr/share/logstash/config/logstash.yml
-#        read_only: true
-#      - type: bind
-#        source: ./build/logstash/pipeline
-#        target: /usr/share/logstash/pipeline
-#        read_only: true
-#    ports:
-#      - "5000:5000/tcp"
-#      - "5000:5000/udp"
-#      - "9600:9600"
-#    environment:
-#      LS_JAVA_OPTS: "-Xms256m -Xmx512m"
-#    depends_on:
-#      - es
-#
-#  kibana:
-#    build:
-#      context: build/kibana/
-#      args:
-#        ELK_VERSION: 7.8.0
-#    container_name: sketch-kibana
-#    volumes:
-#      - type: bind
-#        source: ./build/kibana/config/kibana.yml
-#        target: /usr/share/kibana/config/kibana.yml
-#        read_only: true
-#    ports:
-#      - "5601:5601"
-#    depends_on:
-#      - es
-
-volumes:
-  elasticsearch:
-    name: elasticsearch
+      MAX_MAP_COUNT: 262144
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
