@@ -1,4 +1,10 @@
 <template>
+  <div class="drawing-control">
+    <input type="color" :disabled="!isDrawing" v-model="lineColor" />
+    <span class="icon is-clickable" @click="resetAndSend">
+      <i class="fas fa-trash"></i>
+    </span>
+  </div>
   <div>
     <canvas
       :id="canvasId"
@@ -26,23 +32,35 @@ export default {
   },
   data: () => ({
     path: null,
-    scope: null
+    scope: null,
+    lineColor: "#000"
   }),
   methods: {
+    resetAndSend() {
+      this.reset();
+      this.$emit("draw", {
+        reset: true
+      });
+    },
     reset() {
       this.scope.project.activeLayer.removeChildren();
     },
-    updateDrawing(path) {
+    updateDrawing(drawing) {
+      const { path, color, reset } = drawing;
+      if (reset) {
+        this.reset();
+        return;
+      }
       this.scope.activate();
       this.path = new paper.Path(path);
-      this.path.strokeColor = "#000000";
+      this.path.strokeColor = color;
       this.path.strokeJoin = "round";
       this.path.strokeWidth = 1.5;
     },
     pathCreate(scope) {
       scope.activate();
       return new paper.Path({
-        strokeColor: "#000000",
+        strokeColor: this.lineColor,
         strokeJoin: "round",
         strokeWidth: 1.5
       });
@@ -71,7 +89,11 @@ export default {
         if (!this.isDrawing) return;
         // line completed
         self.path.add(event.point);
-        self.$emit("draw", self.path.pathData);
+        self.$emit("draw", {
+          path: self.path.pathData,
+          color: this.lineColor,
+          reset: false
+        });
       };
     }
   },
@@ -89,5 +111,16 @@ export default {
   width: 530px;
   display: block;
   margin: auto;
+}
+
+.drawing-control {
+  display: flex;
+  width: 100%;
+  background: #eee;
+  border-bottom: 1px black solid;
+}
+
+.drawing-control .icon {
+  color: black;
 }
 </style>

@@ -103,7 +103,7 @@ export default {
     const canvas = this.$refs.canvas;
     this.$store.subscribe(mutation => {
       if (mutation.type === "chat/REMOTE_DRAWING")
-        canvas.updateDrawing(mutation.payload);
+        canvas.updateDrawing(JSON.parse(mutation.payload));
       if (mutation.type === "chat/RESET_DRAWING") canvas.reset();
     });
 
@@ -123,7 +123,7 @@ export default {
       this.goToGeneral();
     },
     onDraw(pathData) {
-      this.sendDrawing(pathData);
+      this.sendDrawing(JSON.stringify(pathData));
     }
   },
   watch: {
