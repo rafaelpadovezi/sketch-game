@@ -95,7 +95,78 @@ namespace Tests.Unit
             bool hit = SketchGame.GuessWord(player, "right guess", turn);
 
             Assert.True(hit);
-            Assert.Equal(10, player.PlayerTurns.First().Points);
+            Assert.Equal(SketchGame.BasePointsHit, player.PlayerTurns.First().Points);
+        }
+
+        [Fact]
+        public void ShouldGuessCorrectlySeconds()
+        {
+            var turn = new Turn
+            {
+                Id = Guid.NewGuid(),
+                Word = new Word
+                {
+                    Content = "Right guess"
+                }
+            };
+            Player player = new Player
+            {
+                Id = Guid.NewGuid(),
+                PlayerTurns = new List<PlayerTurn>
+                {
+                    new PlayerTurn { TurnId = turn.Id },
+                    new PlayerTurn { TurnId = Guid.NewGuid() }
+                }
+            };
+            turn.PlayersTurns = new List<PlayerTurn>
+            {
+                new PlayerTurn { PlayerId = player.Id },
+                new PlayerTurn { PlayerId = Guid.NewGuid(), IsDrawing = true },
+                new PlayerTurn { PlayerId = Guid.NewGuid(), Points = SketchGame.BasePointsDrawing }
+            };
+
+            bool hit = SketchGame.GuessWord(player, "right guess", turn);
+
+            Assert.True(hit);
+            Assert.Equal(SketchGame.BasePointsHit - 1, player.PlayerTurns.First().Points);
+        }
+
+        [Fact]
+        public void ShouldGuessCorrectlyAfter6Plyers()
+        {
+            var turn = new Turn
+            {
+                Id = Guid.NewGuid(),
+                Word = new Word
+                {
+                    Content = "Right guess"
+                }
+            };
+            Player player = new Player
+            {
+                Id = Guid.NewGuid(),
+                PlayerTurns = new List<PlayerTurn>
+                {
+                    new PlayerTurn { TurnId = turn.Id },
+                    new PlayerTurn { TurnId = Guid.NewGuid() }
+                }
+            };
+            turn.PlayersTurns = new List<PlayerTurn>
+            {
+                new PlayerTurn { PlayerId = player.Id },
+                new PlayerTurn { PlayerId = Guid.NewGuid(), IsDrawing = true },
+                new PlayerTurn { PlayerId = Guid.NewGuid(), Points = SketchGame.BasePointsDrawing },
+                new PlayerTurn { PlayerId = Guid.NewGuid(), Points = SketchGame.BasePointsDrawing },
+                new PlayerTurn { PlayerId = Guid.NewGuid(), Points = SketchGame.BasePointsDrawing },
+                new PlayerTurn { PlayerId = Guid.NewGuid(), Points = SketchGame.BasePointsDrawing },
+                new PlayerTurn { PlayerId = Guid.NewGuid(), Points = SketchGame.BasePointsDrawing },
+                new PlayerTurn { PlayerId = Guid.NewGuid(), Points = SketchGame.BasePointsDrawing }
+            };
+
+            bool hit = SketchGame.GuessWord(player, "right guess", turn);
+
+            Assert.True(hit);
+            Assert.Equal(5, player.PlayerTurns.First().Points);
         }
 
         [Fact]
@@ -118,7 +189,7 @@ namespace Tests.Unit
         }
 
         [Fact]
-        public void ShouldCalculateDrawingPointsWithHits()
+        public void ShouldCalculateDrawingPointsWith1Hit()
         {
             var drawingPlayer = new PlayerTurn
             {
@@ -130,11 +201,53 @@ namespace Tests.Unit
                 new PlayerTurn
                 {
                     IsDrawing = false,
-                    Points = 10
+                    Points = SketchGame.BasePointsHit
                 }
             });
 
-            Assert.Equal(10, points);
+            Assert.Equal(SketchGame.BasePointsDrawing, points);
+        }
+
+        [Fact]
+        public void ShouldCalculateDrawingPointsWith2Hits()
+        {
+            var drawingPlayer = new PlayerTurn
+            {
+                IsDrawing = true
+            };
+            var points = SketchGame.CalculateDrawingPoints(new List<PlayerTurn>
+            {
+                drawingPlayer,
+                new PlayerTurn
+                {
+                    IsDrawing = false,
+                    Points = SketchGame.BasePointsHit
+                },
+                new PlayerTurn
+                {
+                    IsDrawing = false,
+                    Points = SketchGame.BasePointsHit - 1
+                }
+            });
+
+            Assert.Equal(SketchGame.BasePointsDrawing + 1, points);
+        }
+
+        [Fact]
+        public void ShouldCalculateDrawingPointsWith7Hits()
+        {
+            var drawingPlayer = new PlayerTurn
+            {
+                IsDrawing = true
+            };
+            var playerTurns = Enumerable.Range(SketchGame.BasePointsHit, 7)
+                .Select(x => new PlayerTurn { IsDrawing = false, Points = x })
+                .ToList();
+            playerTurns.Add(drawingPlayer);
+
+            var points = SketchGame.CalculateDrawingPoints(playerTurns);
+
+            Assert.Equal(SketchGame.BasePointsDrawing + 5, points);
         }
     }
 }

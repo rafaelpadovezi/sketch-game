@@ -8,6 +8,9 @@ namespace Sketch.Business
 {
     public class SketchGame
     {
+        public const int BasePointsHit = 10;
+        public const int BasePointsDrawing = 10;
+
         public static (Round round, Turn turn) NewRound(
             Word word,
             IEnumerable<Player> players)
@@ -24,7 +27,7 @@ namespace Sketch.Business
             var playerTurn = player.PlayerTurns.Single(x => x.TurnId == turn.Id);
             if (guess.ToLowerInvariant() == turn.Word.Content.ToLowerInvariant())
             {
-                playerTurn.Points = 10;
+                playerTurn.Points = BasePointsHit - Math.Min(turn.PlayersTurns.Count(x => x.Hit), 5);
             }
 
             return playerTurn.Hit;
@@ -39,9 +42,11 @@ namespace Sketch.Business
 
         public static int CalculateDrawingPoints(IEnumerable<PlayerTurn> playerTurns)
         {
-            bool gotHits = playerTurns.Where(x => !x.IsDrawing).Any(x => x.Hit);
+            var hits = playerTurns.Where(x => !x.IsDrawing).Count(x => x.Hit);
 
-            return gotHits ? 10 : 0;
+            return hits > 0
+                ? BasePointsDrawing + Math.Min(hits - 1, 5)
+                : 0;
         }
 
         public static Turn NextTurn(

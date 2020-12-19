@@ -33,7 +33,7 @@ namespace Tests.Integration
         {
             // arrange
             _ = new TestingScenarioBuilder(DbContext, Server);
-            var username = DbContext.Players.First().Username;
+            var username = DbContext.Players.First(x => x.IsActive).Username;
 
             // act
             var response = await Client.PostJsonAsync(url, username);

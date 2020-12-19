@@ -37,6 +37,7 @@ export default {
   }),
   methods: {
     resetAndSend() {
+      if (!this.isDrawing) return;
       this.reset();
       this.$emit("draw", {
         reset: true
